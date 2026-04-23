@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>limi</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Mono:wght@300;400;500&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #000;
+  --fg: #fff;
+  --dim: #444;
+  --mid: #888;
+  --border: #222;
+  --hover-bg: rgba(255,255,255,0.04);
+  --mono: 'Share Tech Mono', monospace;
+  --body: 'DM Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ── CANVAS ─────────────────────────────── */
+#glCanvas {
+  position: fixed; inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  image-rendering: pixelated;
+}
+#glCanvas.visible { opacity: 0.5; }
+
+#gridBg {
+  position: fixed; inset: 0;
+  z-index: 0;
+  display: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── TERMINAL ───────────────────────────── */
+#terminal {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 5vw, 60px);
+  font-family: var(--mono);
+  font-size: clamp(11px, 1.4vw, 14px);
+  line-height: 1.7;
+  color: #fff;
+  overflow: hidden;
+  transition: opacity 0.8s ease;
+}
+
+#terminal.fade-out { opacity: 0; pointer-events: none; }
+
+#termOutput { flex: 1; overflow: hidden; }
+
+.term-line { display: block; }
+.term-ok    { color: #fff; }
+.term-dim   { color: #555; }
+.term-cmd   { color: #aaa; }
+
+#termCursor {
+  display: inline-block;
+  width: 9px; height: 14px;
+  background: #fff;
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── OVERLAY BOXES ──────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+
+.warn-box {
+  border: 1px solid #fff;
+  padding: 0;
+  max-width: 520px;
+  width: 90%;
+  background: #000;
+  font-family: var(--mono);
+}
+
+.warn-header {
+  border-bottom: 1px solid #fff;
+  padding: 14px 24px;
+  font-size: 11px;
+  letter-spacing: 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.warn-header::before {
+  content: '⚠';
+  font-size: 16px;
+}
+
+.warn-body {
+  padding: 28px 24px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #aaa;
+}
+
+.warn-body strong { color: #fff; display: block; margin-bottom: 8px; }
+
+.warn-footer {
+  border-top: 1px solid #222;
+  padding: 16px 24px;
+  display: flex;
+  gap: 2px;
+}
+
+.btn {
+  padding: 10px 28px;
+  border: 1px solid #fff;
+  background: #000;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 4px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.btn:hover { background: #fff; color: #000; }
+.btn + .btn { border-left: none; }
+
+/* ── MAIN ───────────────────────────────── */
+#main {
+  position: fixed; inset: 0;
+  overflow-y: auto;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+  display: block;
+}
+
+#main.visible { opacity: 1; pointer-events: all; }
+
+/* ── NAV ────────────────────────────────── */
+nav {
+  position: sticky; top: 0;
+  background: rgba(0,0,0,0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: stretch;
+  z-index: 50;
+  font-family: var(--mono);
+}
+
+.nav-logo {
+  padding: 18px 32px;
+  font-size: 14px;
+  letter-spacing: 8px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+.nav-tabs {
+  margin-left: auto;
+  display: flex;
+}
+
+.nav-tab {
+  padding: 22px 36px;
+  font-size: 13px;
+  letter-spacing: 5px;
+  color: #999;
+  cursor: pointer;
+  border-left: 1px solid var(--border);
+  transition: color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.nav-tab:hover { color: #fff; background: var(--hover-bg); }
+.nav-tab.active { color: #fff; }
+
+/* ── SECTIONS ───────────────────────────── */
+section { display: none; }
+section.active { display: block; }
+
+/* ── HERO ───────────────────────────────── */
+.hero {
+  min-height: calc(100vh - 56px);
+  padding: clamp(40px, 8vw, 100px) clamp(24px, 6vw, 80px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.hero-eyebrow {
+  font-size: 10px;
+  letter-spacing: 6px;
+  color: var(--dim);
+  margin-bottom: 28px;
+  font-family: var(--mono);
+}
+
+.hero-name {
+  font-size: clamp(72px, 14vw, 160px);
+  font-family: var(--mono);
+  font-weight: 400;
+  letter-spacing: -3px;
+  line-height: 0.95;
+  margin-bottom: 28px;
+}
+
+.hero-role {
+  font-size: 11px;
+  letter-spacing: 8px;
+  color: var(--dim);
+  margin-bottom: 52px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+.hero-bio {
+  max-width: 520px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #999;
+  margin-bottom: 52px;
+}
+
+.hero-discord {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #555;
+  padding: 14px 26px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: #bbb;
+  background: rgba(255,255,255,0.03);
+}
+
+.hero-discord span { color: #fff; font-size: 14px; letter-spacing: 2px; }
+
+/* ── STATS ──────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.stat {
+  padding: 28px 0;
+  border-right: 1px solid var(--border);
+}
+.stat:last-child { border-right: none; }
+
+.stat-n {
+  font-size: clamp(24px, 3vw, 36px);
+  font-family: var(--mono);
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.stat-l {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--dim);
+  font-family: var(--mono);
+}
+
+/* ── PAGE HEADER ────────────────────────── */
+.page-head {
+  padding: clamp(40px, 6vw, 80px) clamp(24px, 6vw, 80px) 40px;
+}
+
+.page-tag {
+  font-size: 10px;
+  letter-spacing: 6px;
+  color: var(--dim);
+  font-family: var(--mono);
+  margin-bottom: 14px;
+}
+
+.page-title {
+  font-size: clamp(28px, 5vw, 48px);
+  font-family: var(--mono);
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+
+/* ── PROJECTS ───────────────────────────── */
+.projects-grid {
+  padding: 40px clamp(24px, 6vw, 80px) 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background: var(--bg);
+  padding: 32px;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.project-card:hover { background: var(--hover-bg); }
+
+.project-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 1px solid #1a1a1a;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: #2a2a2a;
+  font-family: var(--mono);
+  position: relative;
+  overflow: hidden;
+  background: #070707;
+}
+
+.project-thumb::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 3px
+  );
+}
+
+/* Roblox icon placeholder */
+.project-thumb svg {
+  width: 32px; height: 32px;
+  opacity: 0.15;
+}
+
+.proj-role {
+  display: inline-block;
+  border: 1px solid #2a2a2a;
+  font-size: 9px;
+  letter-spacing: 4px;
+  padding: 4px 10px;
+  color: #555;
+  font-family: var(--mono);
+  margin-bottom: 14px;
+}
+
+.proj-name {
+  font-size: 17px;
+  font-family: var(--mono);
+  font-weight: 400;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.proj-date {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 3px;
+  font-family: var(--mono);
+  margin-bottom: 16px;
+}
+
+.proj-desc {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.8;
+  flex: 1;
+}
+
+.proj-link {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #444;
+  font-family: var(--mono);
+  text-decoration: none;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 2px;
+  transition: color 0.15s, border-color 0.15s;
+  width: fit-content;
+}
+
+.proj-link:hover { color: #fff; border-color: #fff; }
+
+/* ── VIDEO THUMB ─────────────────────────── */
+.video-thumb-link {
+  display: block;
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #080808;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.video-thumb-link img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.video-thumb-link:hover img { opacity: 1; }
+
+.video-play-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  transition: background 0.2s;
+}
+
+.video-thumb-link:hover .video-play-btn { background: rgba(0,0,0,0.15); }
+
+.video-play-btn svg {
+  width: 56px; height: 56px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 12px rgba(0,0,0,0.8));
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.video-thumb-link:hover .video-play-btn svg { transform: scale(1.08); opacity: 1; }
+
+.video-yt-label {
+  position: absolute;
+  bottom: 10px; right: 12px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.5);
+}
+.videos-grid {
+  padding: 0 clamp(24px, 6vw, 80px) 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 40px;
+}
+
+.video-card {
+  border: 1px solid var(--border);
+  background: #050505;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-warn-bar {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: #666;
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-warn-bar::before { content: '⚠'; font-size: 12px; }
+
+.video-embed {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #080808;
+}
+
+.video-embed iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+
+.video-label {
+  padding: 14px 18px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #555;
+  font-family: var(--mono);
+  border-top: 1px solid #111;
+}
+
+.video-fallback {
+  display: block;
+  padding: 10px 18px 14px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #333;
+  font-family: var(--mono);
+  text-decoration: none;
+  border-top: 1px solid #0d0d0d;
+  transition: color 0.15s;
+}
+.video-fallback:hover { color: #777; }
+.video-fallback::before { content: '↗ '; }
+
+/* ── SCROLLBAR ──────────────────────────── */
+#main::-webkit-scrollbar { width: 4px; }
+#main::-webkit-scrollbar-track { background: #000; }
+#main::-webkit-scrollbar-thumb { background: #222; }
+#main::-webkit-scrollbar-thumb:hover { background: #333; }
+
+/* ── RESPONSIVE ─────────────────────────── */
+@media (max-width: 600px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="glCanvas"></canvas>
+<div id="gridBg"></div>
+
+<!-- TERMINAL -->
+<div id="terminal">
+  <div id="termOutput"></div>
+  <span id="termCursor"></span>
+</div>
+
+<!-- WARNING 1 — SHADER PERFORMANCE -->
+<div class="overlay" id="warn1">
+  <div class="warn-box">
+    <div class="warn-header">WARNING — PERFORMANCE</div>
+    <div class="warn-body">
+      <strong>This site runs heavy WebGL shaders.</strong>
+      These may cause slowdowns on low-end hardware.<br>
+      Decrease shader quality?
+    </div>
+    <div class="warn-footer">
+      <button class="btn" onclick="handleW1(true)">YES</button>
+      <button class="btn" onclick="handleW1(false)">NO</button>
+    </div>
+  </div>
+</div>
+
+<!-- WARNING 2 — EPILEPSY -->
+<div class="overlay" id="warn2">
+  <div class="warn-box">
+    <div class="warn-header">WARNING — EPILEPSY</div>
+    <div class="warn-body">
+      <strong>Flashing / animated visuals ahead.</strong>
+      This site contains animated background effects. If you are photosensitive or prone to seizures, these can be disabled entirely.<br><br>
+      Disable background animations?
+    </div>
+    <div class="warn-footer">
+      <button class="btn" onclick="handleW2(true)">YES</button>
+      <button class="btn" onclick="handleW2(false)">NO</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN SITE -->
+<div id="main">
+  <nav>
+    <div class="nav-logo">LIMI</div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showTab('home', this)">HOME</div>
+      <div class="nav-tab" onclick="showTab('projects', this)">PROJECTS</div>
+      <div class="nav-tab" onclick="showTab('videos', this)">VIDEOS</div>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <section id="s-home" class="active">
+    <div class="hero">
+      <div class="hero-eyebrow">// ROBLOX DEVELOPER</div>
+      <div class="hero-name">limi</div>
+      <div class="hero-role">Programmer &nbsp;·&nbsp; UI &nbsp;·&nbsp; VFX</div>
+      <p class="hero-bio">
+        18. Three years of Luau. I build game systems that are clean under the hood and
+        polished on the surface — from procedural room generators that detect exits and
+        place rooms automatically, to combat frameworks, modular builders, and full VFX
+        pipelines. I've touched a lot of projects and I move fast.
+      </p>
+      <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-n">3</div><div class="stat-l">YRS EXP</div></div>
+        <div class="stat"><div class="stat-n">18</div><div class="stat-l">YEARS OLD</div></div>
+        <div class="stat"><div class="stat-n">LUAU</div><div class="stat-l">PRIMARY LANG</div></div>
+        <div class="stat"><div class="stat-n">FULL</div><div class="stat-l">STACK</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="s-projects">
+    <div class="page-head">
+      <div class="page-tag">// WORK</div>
+      <div class="page-title">Projects</div>
+    </div>
+    <div class="projects-grid">
+
+      <div class="project-card">
+        <div class="proj-role">PROGRAMMER · UI</div>
+        <div class="proj-name">F3X Building Competition</div>
+        <div class="proj-date">APR 2026 — APR 2026</div>
+        <p class="proj-desc">
+          Full UI and all programming. Custom F3X building restrictions,
+          custom admin commands layered on top of HD Admin, and anything
+          else the project needed.
+        </p>
+        <a class="proj-link" href="https://www.roblox.com/games/108033625318971" target="_blank" rel="noopener">VIEW ON ROBLOX →</a>
+      </div>
+
+      <div class="project-card">
+        <div class="proj-role">PROGRAMMER · VFX</div>
+        <div class="proj-name">Vampire Survivors Gun Test</div>
+        <div class="proj-date">JAN 2026 — JAN 2026</div>
+        <p class="proj-desc">
+          Built everything end-to-end. All programming and visual effects handled solo.
+        </p>
+        <a class="proj-link" href="https://www.roblox.com/games/119725468708582" target="_blank" rel="noopener">VIEW ON ROBLOX →</a>
+      </div>
+
+      <div class="project-card">
+        <div class="proj-role">FULL STACK</div>
+        <div class="proj-name">Obby But There's A Twist Every...</div>
+        <div class="proj-date">SEP 2025 — SEP 2025</div>
+        <p class="proj-desc">
+          Random twist applied to a random player every 5 seconds. Built the
+          shop system, inventory system, item equipping, datastore — the works.
+        </p>
+        <a class="proj-link" href="https://www.roblox.com/games/9505926421" target="_blank" rel="noopener">VIEW ON ROBLOX →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- VIDEOS -->
+  <section id="s-videos">
+    <div class="page-head">
+      <div class="page-tag">// SHOWCASE</div>
+      <div class="page-title">Videos</div>
+    </div>
+    <div class="videos-grid">
+
+      <div class="video-card">
+        <div class="video-warn-bar">FLASHING LIGHTS — PHOTOSENSITIVITY WARNING</div>
+        <a class="video-thumb-link" href="https://www.youtube.com/watch?v=hZPPMVoav38" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/hZPPMVoav38/hqdefault.jpg" alt="Custom VFX System" loading="lazy">
+          <div class="video-play-btn">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+          </div>
+          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
+        </a>
+        <div class="video-label">CUSTOM VFX SYSTEM — COMPLEX WEAPON EFFECTS</div>
+      </div>
+
+      <div class="video-card">
+        <a class="video-thumb-link" href="https://youtu.be/os1wjdgd5PE" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/os1wjdgd5PE/hqdefault.jpg" alt="Combat System" loading="lazy">
+          <div class="video-play-btn">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+          </div>
+          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
+        </a>
+        <div class="video-label">COMBAT SYSTEM — ABILITIES · AI · ANIMATION · VFX</div>
+      </div>
+
+      <div class="video-card">
+        <a class="video-thumb-link" href="https://youtu.be/HXUWDUyEQg8" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/HXUWDUyEQg8/hqdefault.jpg" alt="Grid Building System" loading="lazy">
+          <div class="video-play-btn">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+          </div>
+          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
+        </a>
+        <div class="video-label">GRID BUILDING · SURFACE GUI · INVENTORY SYSTEM</div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+let quality = 'high';
+
+const out = document.getElementById('termOutput');
+
+function line(text, cls = '') {
+  const el = document.createElement('div');
+  el.className = 'term-line ' + cls;
+  el.textContent = text || '\u00A0';
+  out.appendChild(el);
+}
+
+const phase1 = [
+  [0,    '',                             'term-dim'],
+  [60,   'LIMI/OS  boot  v0.3.1',        'term-ok'],
+  [100,  '─────────────────────────────────────────────────', 'term-dim'],
+  [200,  '',                             ''],
+  [380,  'mem check ............................... OK',    'term-ok'],
+  [560,  'cpu  Luau v5.1 .......................... OK',    'term-ok'],
+  [720,  'gpu  WebGL 2.0 context .................. OK',    'term-ok'],
+  [900,  '',                             ''],
+  [1050, 'mount  /portfolio/projects ............. 3 items','term-ok'],
+  [1180, 'mount  /portfolio/videos ............... 3 items','term-ok'],
+  [1320, 'mount  /portfolio/shaders .............. ready', 'term-ok'],
+  [1500, '',                             ''],
+  [1680, '> checking display settings ...',               'term-cmd'],
+];
+
+const phase2 = [
+  [0,   '> display settings confirmed.',                  'term-cmd'],
+  [120, '',                             ''],
+  [260, 'load  shader pipeline ................... OK',   'term-ok'],
+  [400, 'load  navigation ....................... OK',    'term-ok'],
+  [530, 'load  project db ....................... OK',    'term-ok'],
+  [650, 'load  video renderer ................... OK',   'term-ok'],
+  [800, '',                             ''],
+  [920, 'boot complete.',                                 'term-ok'],
+  [1060,'',                             ''],
+  [1150,'> launching interface ...',                      'term-cmd'],
+];
+
+phase1.forEach(([delay, text, cls]) => {
+  if (delay === 1680 && text.includes('display')) {
+    setTimeout(() => {
+      line(text, cls);
+      setTimeout(() => showWarn('warn1'), 350);
+    }, delay);
+  } else {
+    setTimeout(() => line(text, cls), delay);
+  }
+});
+
+function showWarn(id) {
+  document.getElementById(id).classList.add('show');
+}
+function hideWarn(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function handleW1(reduce) {
+  if (reduce) quality = 'low';
+  hideWarn('warn1');
+  runPhase2();
+}
+
+function handleW2(disable) {
+  if (disable) quality = 'off';
+  hideWarn('warn2');
+  runPhase2();
+}
+
+function runPhase2() {
+  phase2.forEach(([delay, text, cls]) => {
+    setTimeout(() => line(text, cls), delay);
+  });
+  const last = phase2[phase2.length - 1][0];
+  setTimeout(launchSite, last + 600);
+}
+
+function launchSite() {
+  const term = document.getElementById('terminal');
+  term.classList.add('fade-out');
+  const main = document.getElementById('main');
+  main.classList.add('visible');
+  if (quality === 'off') {
+    document.getElementById('gridBg').style.display = 'block';
+  } else {
+    const canvas = document.getElementById('glCanvas');
+    canvas.classList.add('visible');
+    initGL(quality === 'low');
+  }
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    term.style.display = 'none';
+    document.body.style.overflow = '';
+  }, 900);
+}
+
+function showTab(name, el) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('s-' + name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('main').scrollTo(0, 0);
+}
+
+function initGL(lowQ) {
+  const canvas = document.getElementById('glCanvas');
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+
+  const scale = lowQ ? 0.35 : 0.75;
+
+  function resize() {
+    canvas.width  = Math.floor(window.innerWidth  * scale);
+    canvas.height = Math.floor(window.innerHeight * scale);
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const VS = `
+    attribute vec2 pos;
+    void main(){ gl_Position = vec4(pos,0.0,1.0); }
+  `;
+
+  const FS = `
+    precision mediump float;
+    uniform vec2  uRes;
+    uniform float uTime;
+
+    vec2 rot(vec2 p, float a) {
+      return vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
+    }
+
+    float rand(float n) {
+      return fract(sin(n) * 43758.5453123);
+    }
+
+    vec2 rand2(vec2 p) {
+      return fract(vec2(sin(p.x * 591.32 + p.y * 154.077), cos(p.x * 391.32 + p.y * 49.077)));
+    }
+
+    float noise1(float p) {
+      return mix(rand(floor(p)), rand(floor(p) + 1.0), fract(p));
+    }
+
+    float voronoi(vec2 x) {
+      vec2 p = floor(x);
+      vec2 f = fract(x);
+      vec2 res = vec2(8.0);
+      for(int j = -1; j <= 1; j++) {
+        for(int i = -1; i <= 1; i++) {
+          vec2 b = vec2(float(i), float(j));
+          vec2 r = b - f + rand2(p + b);
+          float d = max(abs(r.x), abs(r.y));
+          if(d < res.x) { res.y = res.x; res.x = d; }
+          else if(d < res.y) { res.y = d; }
+        }
+      }
+      return res.y - res.x;
+    }
+
+    void main() {
+      float flicker = noise1(uTime * 0.25) * 0.15 + 0.9;
+      vec2 uv = gl_FragCoord.xy / uRes.xy;
+      uv = (uv - 0.5) * 2.0;
+      vec2 suv = uv;
+      uv.x *= uRes.x / uRes.y;
+
+      uv *= 0.6 + sin(uTime * 0.07) * 0.4;
+      uv = rot(uv, sin(uTime * 0.12) * 1.0);
+      uv += uTime * 0.25;
+
+      float v = 0.0;
+      float a = 0.6, f = 1.0;
+
+      for(int i = 0; i < 3; i++) {
+        float v1 = voronoi(uv * f + 5.0);
+        float v2 = 0.0;
+
+        if(i > 0) {
+          v2 = voronoi(uv * f * 0.5 + 50.0 + uTime * 0.4);
+          float va = 1.0 - smoothstep(0.0, 0.1, v1);
+          float vb = 1.0 - smoothstep(0.0, 0.08, v2);
+          v += a * pow(va * (0.5 + vb), 2.0);
+        }
+
+        v1 = 1.0 - smoothstep(0.0, 0.3, v1);
+        v2 = a * noise1(v1 * 5.5 + 0.1);
+
+        if(i == 0)
+          v += v2 * flicker;
+        else
+          v += v2;
+
+        f *= 3.0;
+        a *= 0.7;
+      }
+
+      v *= exp(-0.6 * length(suv)) * 1.2;
+
+      vec3 cexp = vec3(3.8, 4.0, 3.4);
+      vec3 col = vec3(pow(v, cexp.x), pow(v, cexp.y), pow(v, cexp.z)) * 2.0;
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  function mkShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    return s;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+
+  const aPos = gl.getAttribLocation(prog, 'pos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uRes  = gl.getUniformLocation(prog, 'uRes');
+  const uTime = gl.getUniformLocation(prog, 'uTime');
+
+  function frame(ms) {
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, ms * 0.001);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
