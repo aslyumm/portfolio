@@ -555,6 +555,181 @@ section.active { display: block; }
 .video-fallback:hover { color: #777; }
 .video-fallback::before { content: '↗ '; }
 
+.pkg-viewer {
+  position: relative;
+  padding: 20px clamp(24px, 6vw, 80px) 30px;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.pkg-arrow {
+  flex: 0 0 auto;
+  width: 54px;
+  border: 1px solid var(--border);
+  background: #050505;
+  color: #777;
+  font-family: var(--mono);
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.pkg-arrow:hover { color: #fff; background: var(--hover-bg); border-color: #fff; }
+.pkg-arrow:active { background: rgba(255,255,255,0.08); }
+
+.pkg-stage {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: calc(100vh - 320px);
+  border: 1px solid var(--border);
+  background: #050505;
+  overflow: hidden;
+}
+
+.pkg-stage::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 3px
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+.pkg-panel {
+  position: absolute;
+  inset: 0;
+  padding: clamp(22px, 4vw, 44px);
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  overflow-y: auto;
+}
+.pkg-panel.active {
+  display: flex;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.pkg-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 26px;
+}
+
+.pkg-index {
+  font-size: 10px;
+  letter-spacing: 5px;
+  color: var(--dim);
+  font-family: var(--mono);
+  margin-bottom: 14px;
+}
+
+.pkg-name {
+  font-size: clamp(22px, 3.4vw, 34px);
+  font-family: var(--mono);
+  font-weight: 400;
+  letter-spacing: -1px;
+  margin-bottom: 14px;
+}
+
+.pkg-install {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #999;
+  border: 1px solid var(--border);
+  padding: 7px 13px;
+  background: #000;
+}
+.pkg-install span { color: #555; }
+
+.pkg-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 30px;
+  flex: 1;
+}
+
+.pkg-demo-box {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: #2f2f2f;
+}
+
+.pkg-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pkg-section-label {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: var(--dim);
+  font-family: var(--mono);
+  margin-bottom: 12px;
+}
+
+.pkg-explanation {
+  font-size: 12px;
+  line-height: 1.9;
+  color: #999;
+}
+
+.pkg-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.pkg-link {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #666;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 13px 16px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.pkg-link:hover { color: #fff; border-color: #fff; background: var(--hover-bg); }
+
+.pkg-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 0 60px;
+}
+
+.pkg-dot {
+  width: 8px; height: 8px;
+  border: 1px solid #444;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pkg-dot:hover { border-color: #888; }
+.pkg-dot.active { background: #fff; border-color: #fff; }
+
+@media (max-width: 760px) {
+  .pkg-grid { grid-template-columns: 1fr; }
+  .pkg-arrow { width: 42px; font-size: 18px; }
+  .pkg-stage { min-height: calc(100vh - 300px); }
+}
+
 /* ── SCROLLBAR ──────────────────────────── */
 #main::-webkit-scrollbar { width: 4px; }
 #main::-webkit-scrollbar-track { background: #000; }
@@ -619,6 +794,7 @@ section.active { display: block; }
       <div class="nav-tab active" onclick="showTab('home', this)">HOME</div>
       <div class="nav-tab" onclick="showTab('projects', this)">PROJECTS</div>
       <div class="nav-tab" onclick="showTab('videos', this)">VIDEOS</div>
+      <div class="nav-tab" onclick="showTab('packages', this)">PACKAGES</div>
     </div>
   </nav>
 
@@ -634,7 +810,7 @@ section.active { display: block; }
       <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
       <div class="stats">
         <div class="stat"><div class="stat-n">3</div><div class="stat-l">YRS EXP</div></div>
-        <div class="stat"><div class="stat-n">16</div><div class="stat-l">YEARS OLD</div></div>
+        <div class="stat"><div class="stat-n">16</div><div class="stat-l">YRS OLD</div></div>
         <div class="stat"><div class="stat-n">LUAU</div><div class="stat-l">PRIMARY LANG</div></div>
         <div class="stat"><div class="stat-n">FULL</div><div class="stat-l">STACK</div></div>
       </div>
@@ -738,6 +914,47 @@ section.active { display: block; }
     </div>
   </section>
 
+  <section id="s-packages">
+    <div class="page-head">
+      <div class="page-tag">// WALLY</div>
+      <div class="page-title">Packages</div>
+    </div>
+    <div class="pkg-viewer">
+      <button class="pkg-arrow pkg-arrow-left" onclick="pkgNav(-1)" aria-label="Previous package">&larr;</button>
+      <div class="pkg-stage" id="pkgStage">
+
+        <article class="pkg-panel">
+          <div class="pkg-header">
+            <div class="pkg-index"></div>
+            <div class="pkg-name">Mirage</div>
+            <div class="pkg-install">wally = <span>"aslyumm/mirage@0.1.0"</span></div>
+          </div>
+          <div class="pkg-grid">
+            <a class="video-thumb-link" href="https://youtu.be/KPk9QT_cwOw" target="_blank" rel="noopener">
+              <img src="https://img.youtube.com/vi/KPk9QT_cwOw/hqdefault.jpg" alt="Mirage demo" loading="lazy">
+              <div class="video-play-btn">
+                <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+              </div>
+              <div class="video-yt-label">WATCH DEMO &uarr;</div>
+            </a>
+            <div class="pkg-info">
+              <div class="pkg-section-label">EXPLANATION</div>
+              <p class="pkg-explanation">a small Wally package that adds client-side prediction &amp; reconciliation for whatever custom state you stream from the server.</p>
+              <div class="pkg-links">
+                <a class="pkg-link" href="https://aslyumm.github.io/Mirage/" target="_blank" rel="noopener">DOCUMENTATION &uarr;</a>
+                <a class="pkg-link" href="https://devforum.roblox.com/t/release-a-free-solution-to-ping-for-server-authoritative-data-introducing-mirage/4757963" target="_blank" rel="noopener">DEVFORUM POST &uarr;</a>
+                <a class="pkg-link" href="https://github.com/aslyumm/Mirage" target="_blank" rel="noopener">GITHUB &uarr;</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+      <button class="pkg-arrow pkg-arrow-right" onclick="pkgNav(1)" aria-label="Next package">&rarr;</button>
+    </div>
+    <div class="pkg-dots" id="pkgDots"></div>
+  </section>
+
 </div>
 
 <script>
@@ -763,6 +980,7 @@ const phase1 = [
   [900,  '',                                 ''],
   [1050, 'mount  /portfolio/projects ............. 3 items','term-ok'],
   [1180, 'mount  /portfolio/videos ............... 3 items','term-ok'],
+  [1250, 'mount  /portfolio/packages ............. 1 item', 'term-ok'],
   [1320, 'mount  /portfolio/shaders .............. ready', 'term-ok'],
   [1500, '',                                 ''],
   [1680, '> checking display settings ...',               'term-cmd'],
@@ -845,6 +1063,55 @@ function showTab(name, el) {
   el.classList.add('active');
   document.getElementById('main').scrollTo(0, 0);
 }
+
+let pkgIdx = 0;
+
+function pkgPanels() {
+  return document.querySelectorAll('#pkgStage .pkg-panel');
+}
+
+function pkgGo(i) {
+  const panels = pkgPanels();
+  const total = panels.length;
+  if (!total) return;
+  pkgIdx = (i + total) % total;
+  panels.forEach((p, n) => p.classList.toggle('active', n === pkgIdx));
+  document.querySelectorAll('#pkgDots .pkg-dot').forEach((d, n) => d.classList.toggle('active', n === pkgIdx));
+}
+
+function pkgNav(dir) {
+  pkgGo(pkgIdx + dir);
+}
+
+function pkgInit() {
+  const panels = pkgPanels();
+  const total = panels.length;
+  const left = document.querySelector('.pkg-arrow-left');
+  const right = document.querySelector('.pkg-arrow-right');
+  const dots = document.getElementById('pkgDots');
+  const single = total <= 1;
+  if (left) left.style.display = single ? 'none' : '';
+  if (right) right.style.display = single ? 'none' : '';
+  if (dots) {
+    dots.innerHTML = '';
+    if (!single) {
+      panels.forEach((p, i) => {
+        const d = document.createElement('button');
+        d.className = 'pkg-dot';
+        d.setAttribute('aria-label', 'Go to package ' + (i + 1));
+        d.onclick = () => pkgGo(i);
+        dots.appendChild(d);
+      });
+    }
+  }
+  panels.forEach((p, i) => {
+    const idx = p.querySelector('.pkg-index');
+    if (idx) idx.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+  });
+  pkgGo(0);
+}
+
+pkgInit();
 
 function initGL(lowQ) {
   const canvas = document.getElementById('glCanvas');
