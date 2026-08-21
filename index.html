@@ -38,7 +38,7 @@ body {
   transition: opacity 1.2s ease;
   image-rendering: pixelated;
 }
-#glCanvas.visible { opacity: 0.5; }
+#glCanvas.visible { opacity: 0.28; }
 
 #gridBg {
   position: fixed; inset: 0;
@@ -269,6 +269,30 @@ section.active { display: block; }
 }
 
 .hero-discord span { color: #fff; font-size: 14px; letter-spacing: 2px; }
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 52px;
+}
+.hero-ctas .hero-discord { margin-bottom: 0; }
+
+.hero-hire-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #fff;
+  padding: 14px 26px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: #000;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+.hero-hire-btn:hover { background: #000; color: #fff; }
 
 /* ── STATS ──────────────────────────────── */
 .stats {
@@ -730,6 +754,105 @@ section.active { display: block; }
   .pkg-stage { min-height: calc(100vh - 300px); }
 }
 
+/* ── HIRE ME ────────────────────────────── */
+.hire-wrap {
+  padding: 0 clamp(24px, 6vw, 80px) 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  max-width: 900px;
+}
+
+.hire-block { display: flex; flex-direction: column; }
+
+.hire-label {
+  font-size: 10px;
+  letter-spacing: 5px;
+  color: var(--dim);
+  font-family: var(--mono);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.hire-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hire-list li {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #999;
+  padding-left: 18px;
+  position: relative;
+}
+
+.hire-list li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: #444;
+}
+
+.hire-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.hire-tier {
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: background 0.15s;
+}
+.hire-tier:hover { background: var(--hover-bg); }
+
+.hire-tier-name {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--dim);
+  font-family: var(--mono);
+}
+
+.hire-tier-price {
+  font-size: 20px;
+  font-family: var(--mono);
+  color: #fff;
+}
+
+.hire-tier-desc {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #777;
+}
+
+.hire-cta {
+  border-top: 1px solid var(--border);
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hire-cta-text {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #999;
+  margin-bottom: 24px;
+  max-width: 480px;
+}
+
+@media (max-width: 760px) {
+  .hire-tiers { grid-template-columns: 1fr; }
+}
+
 /* ── SCROLLBAR ──────────────────────────── */
 #main::-webkit-scrollbar { width: 4px; }
 #main::-webkit-scrollbar-track { background: #000; }
@@ -775,7 +898,7 @@ section.active { display: block; }
   <div class="warn-box">
     <div class="warn-header">WARNING — EPILEPSY</div>
     <div class="warn-body">
-      <strong>Flashing / animated visuals ahead.</strong>
+      <strong>flashing / animated visuals ahead.</strong>
       this site contains animated background effects. if you are photosensitive or prone to seizures, these can be disabled entirely.<br><br>
       disable background animations?
     </div>
@@ -795,6 +918,7 @@ section.active { display: block; }
       <div class="nav-tab" onclick="showTab('projects', this)">PROJECTS</div>
       <div class="nav-tab" onclick="showTab('videos', this)">VIDEOS</div>
       <div class="nav-tab" onclick="showTab('packages', this)">PACKAGES</div>
+      <div class="nav-tab" id="tab-hire" onclick="showTab('hire', this)">HIRE ME</div>
     </div>
   </nav>
 
@@ -805,14 +929,17 @@ section.active { display: block; }
       <div class="hero-name">limi</div>
       <div class="hero-role">Programmer &nbsp;·&nbsp; UI &nbsp;·&nbsp; VFX</div>
       <p class="hero-bio">
-        hello! thank you for checking out my portfolio. im limi. a 16 year old programmer with 3 years of experience. my work focuses on networking, physics and backend logic. and syncing backend systems to the frontend efficiently. you can see my projects and videos in the tabs at the top right corner.
+        hello! thank you for checking out my portfolio. im limi, a 16 year old programmer with 3 years of experience. my work focuses on networking, physics, and backend logic, and on syncing backend systems efficiently. you can check out my projects and videos in the tabs above, or head to the hire me tab if you're looking to commission work.
       </p>
-      <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
+      <div class="hero-ctas">
+        <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
+        <div class="hero-hire-btn" onclick="goToHire()">HIRE ME &rarr;</div>
+      </div>
       <div class="stats">
         <div class="stat"><div class="stat-n">3</div><div class="stat-l">YRS EXP</div></div>
         <div class="stat"><div class="stat-n">16</div><div class="stat-l">YRS OLD</div></div>
         <div class="stat"><div class="stat-n">LUAU</div><div class="stat-l">PRIMARY LANG</div></div>
-        <div class="stat"><div class="stat-n">FULL</div><div class="stat-l">STACK</div></div>
+        <div class="stat"><div class="stat-n">OPEN</div><div class="stat-l">COMMISSIONS</div></div>
       </div>
     </div>
   </section>
@@ -874,7 +1001,7 @@ section.active { display: block; }
           </div>
           <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
         </a>
-        <div class="video-label">this is multiversal war rng. a rng game where you put entire armies against eachother (or 1 juggernaut vs an army) uses a complex unexploitable (i mean unexploitable literally as all the client does is rendering.) backend system that can handle wars consisting of thousands of units with unique ais. abour 300 hours of work.</div>
+        <div class="video-label">this is multiversal war rng. a rng game where you put entire armies against each other (or 1 juggernaut vs an army) that uses a complex, unexploitable (i mean unexploitable literally, as all the client does is rendering) backend system that can handle wars consisting of thousands of units with unique ais. about 300 hours of work.</div>
       </div>
 
       <div class="video-card">
@@ -939,7 +1066,7 @@ section.active { display: block; }
             </a>
             <div class="pkg-info">
               <div class="pkg-section-label">EXPLANATION</div>
-              <p class="pkg-explanation">a small Wally package that adds client-side prediction &amp; reconciliation for whatever custom state you stream from the server.</p>
+              <p class="pkg-explanation">a small wally package that adds client-side prediction &amp; reconciliation for whatever custom state you stream from the server.</p>
               <div class="pkg-links">
                 <a class="pkg-link" href="https://aslyumm.github.io/Mirage/" target="_blank" rel="noopener">DOCUMENTATION &uarr;</a>
                 <a class="pkg-link" href="https://devforum.roblox.com/t/release-a-free-solution-to-ping-for-server-authoritative-data-introducing-mirage/4757963" target="_blank" rel="noopener">DEVFORUM POST &uarr;</a>
@@ -953,6 +1080,72 @@ section.active { display: block; }
       <button class="pkg-arrow pkg-arrow-right" onclick="pkgNav(1)" aria-label="Next package">&rarr;</button>
     </div>
     <div class="pkg-dots" id="pkgDots"></div>
+  </section>
+
+  <!-- HIRE ME -->
+  <section id="s-hire">
+    <div class="page-head">
+      <div class="page-tag">// CONTRACT WORK</div>
+      <div class="page-title">Hire Me</div>
+    </div>
+
+    <div class="hire-wrap">
+
+      <div class="hire-block">
+        <div class="hire-label">AVAILABILITY</div>
+        <ul class="hire-list">
+          <li>based in turkey. mostly free throughout the day unless already working on other commissions.</li>
+          <li>currently in a long term position, so only taking on one time commissions right now.</li>
+          <li>how many hours a day are dedicated to a commission is discussed and agreed on in detail beforehand.</li>
+          <li>work is done as fast as reasonably possible, and any time im not free is communicated in advance along with why.</li>
+        </ul>
+      </div>
+
+      <div class="hire-block">
+        <div class="hire-label">RATES</div>
+        <div class="hire-tiers">
+          <div class="hire-tier">
+            <div class="hire-tier-name">small</div>
+            <div class="hire-tier-price">~2,000 robux</div>
+            <div class="hire-tier-desc">about 30 min &ndash; 1 hr of work. eg. a single ability integrated into an already built system, small bug fixes, etc.</div>
+          </div>
+          <div class="hire-tier">
+            <div class="hire-tier-name">medium</div>
+            <div class="hire-tier-price">~15,000 robux</div>
+            <div class="hire-tier-desc">a system upgrade. eg. an abilities system added into an already built combat system.</div>
+          </div>
+          <div class="hire-tier">
+            <div class="hire-tier-name">large</div>
+            <div class="hire-tier-price">50,000+ robux</div>
+            <div class="hire-tier-desc">major network optimizations, a full system built from scratch, or anything that takes days to a week or more. work in this range priced below 50k will be turned down.</div>
+          </div>
+        </div>
+        <ul class="hire-list">
+          <li>pricing isnt calculated strictly per hour. milestone based pricing is also accepted.</li>
+          <li>an accurate quote needs clear communication up front about budget and what the work involves.</li>
+          <li>open to negotiating if a price feels unfair to you or doesnt fit your budget.</li>
+        </ul>
+      </div>
+
+      <div class="hire-block">
+        <div class="hire-label">PAYMENT</div>
+        <ul class="hire-list">
+          <li>both money and robux are accepted, but robux is currently preferred. sending money into turkey tends to be messier and usually means both sides sharing more personal information than most people are comfortable with, so an app would need to be agreed on first.</li>
+          <li>robux payments are calculated at the devex rate, not the purchased robux rate.</li>
+          <li>percentage based deals are not accepted.</li>
+          <li>group funds arent used, to avoid scams, unless a trust payment is made first.</li>
+          <li>a trust payment usually covers about a quarter to half of the total price, depending on the size of the project and the taxes involved, and is negotiable. in most cases it lands around half.</li>
+          <li>work pauses once that portion of the project is done, until the trust payment is sent. the rest can then be sent later through group funds.</li>
+        </ul>
+      </div>
+
+      <div class="hire-cta">
+        <div class="hire-label">CONTACT</div>
+        <p class="hire-cta-text">reach out on discord to talk through a project, timeline, and budget.</p>
+        <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
+      </div>
+
+    </div>
   </section>
 
 </div>
@@ -970,40 +1163,40 @@ function line(text, cls = '') {
 }
 
 const phase1 = [
-  [0,    '',                                 'term-dim'],
-  [60,   'LIMI/OS  boot  v0.3.1',        'term-ok'],
-  [100,  '─────────────────────────────────────────────────', 'term-dim'],
-  [200,  '',                                 ''],
-  [380,  'mem check ............................... OK',    'term-ok'],
-  [560,  'cpu  Luau v5.1 .......................... OK',    'term-ok'],
-  [720,  'gpu  WebGL 2.0 context .................. OK',    'term-ok'],
-  [900,  '',                                 ''],
-  [1050, 'mount  /portfolio/projects ............. 3 items','term-ok'],
-  [1180, 'mount  /portfolio/videos ............... 3 items','term-ok'],
-  [1250, 'mount  /portfolio/packages ............. 1 item', 'term-ok'],
-  [1320, 'mount  /portfolio/shaders .............. ready', 'term-ok'],
-  [1500, '',                                 ''],
-  [1680, '> checking display settings ...',               'term-cmd'],
+  [0,   '',                                 'term-dim'],
+  [20,  'LIMI/OS  boot  v0.3.1',        'term-ok'],
+  [35,  '─────────────────────────────────────────────────', 'term-dim'],
+  [70,  '',                                 ''],
+  [130, 'mem check ............................... OK',    'term-ok'],
+  [190, 'cpu  Luau v5.1 .......................... OK',    'term-ok'],
+  [250, 'gpu  WebGL 2.0 context .................. OK',    'term-ok'],
+  [310, '',                                 ''],
+  [360, 'mount  /portfolio/projects ............. 3 items','term-ok'],
+  [400, 'mount  /portfolio/videos ............... 3 items','term-ok'],
+  [430, 'mount  /portfolio/packages ............. 1 item', 'term-ok'],
+  [460, 'mount  /portfolio/shaders .............. ready', 'term-ok'],
+  [510, '',                                 ''],
+  [570, '> checking display settings ...',               'term-cmd'],
 ];
 
 const phase2 = [
   [0,   '> display settings confirmed.',                  'term-cmd'],
-  [120, '',                                 ''],
-  [260, 'load  shader pipeline ................... OK',   'term-ok'],
-  [400, 'load  navigation ....................... OK',    'term-ok'],
-  [530, 'load  project db ....................... OK',    'term-ok'],
-  [650, 'load  video renderer ................... OK',   'term-ok'],
-  [800, '',                                 ''],
-  [920, 'boot complete.',                                 'term-ok'],
-  [1060,'',                                 ''],
-  [1150,'> launching interface ...',                      'term-cmd'],
+  [30,  '',                                 ''],
+  [70,  'load  shader pipeline ................... OK',   'term-ok'],
+  [110, 'load  navigation ....................... OK',    'term-ok'],
+  [150, 'load  project db ....................... OK',    'term-ok'],
+  [190, 'load  video renderer ................... OK',   'term-ok'],
+  [230, '',                                 ''],
+  [270, 'boot complete.',                                 'term-ok'],
+  [310, '',                                 ''],
+  [350, '> launching interface ...',                      'term-cmd'],
 ];
 
 phase1.forEach(([delay, text, cls]) => {
-  if (delay === 1680 && text.includes('display')) {
+  if (delay === 570 && text.includes('display')) {
     setTimeout(() => {
       line(text, cls);
-      setTimeout(() => showWarn('warn1'), 350);
+      setTimeout(() => showWarn('warn1'), 150);
     }, delay);
   } else {
     setTimeout(() => line(text, cls), delay);
@@ -1034,7 +1227,7 @@ function runPhase2() {
     setTimeout(() => line(text, cls), delay);
   });
   const last = phase2[phase2.length - 1][0];
-  setTimeout(launchSite, last + 600);
+  setTimeout(launchSite, last + 250);
 }
 
 function launchSite() {
@@ -1054,6 +1247,10 @@ function launchSite() {
     term.style.display = 'none';
     document.body.style.overflow = '';
   }, 900);
+}
+
+function goToHire() {
+  showTab('hire', document.getElementById('tab-hire'));
 }
 
 function showTab(name, el) {
@@ -1179,7 +1376,7 @@ function initGL(lowQ) {
       vec2 suv = uv;
       uv.x *= uRes.x / uRes.y;
 
-      uv *= 0.6 + sin(uTime * 0.07) * 0.4;
+      uv *= 1.1;
       uv = rot(uv, sin(uTime * 0.12) * 1.0);
       uv += uTime * 0.25;
 
