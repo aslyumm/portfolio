@@ -86,6 +86,63 @@ body {
 
 @keyframes blink { 50% { opacity: 0; } }
 
+/* ── CRT BOOT ───────────────────────────── */
+#crtFlash {
+  position: fixed; inset: 0;
+  z-index: 260;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes crtFlashAnim {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+#crtFlash.play {
+  animation: crtFlashAnim 0.4s ease-out forwards;
+}
+
+#terminal.crt-boot {
+  animation: crtBootIn 0.48s ease-out both;
+  transform-origin: center center;
+}
+
+@keyframes crtBootIn {
+  0%   { transform: scaleY(0.008); filter: brightness(6) contrast(2.2); }
+  12%  { transform: scaleY(0.008); filter: brightness(6) contrast(2.2); }
+  40%  { transform: scaleY(1);     filter: brightness(3) contrast(1.5); }
+  100% { transform: scaleY(1);     filter: brightness(1) contrast(1); }
+}
+
+.crt-scan {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.05) 0px,
+    rgba(255,255,255,0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+  animation: crtFlicker 0.15s steps(2) infinite;
+  transition: opacity 0.25s ease;
+}
+
+.crt-scan.off {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes crtFlicker {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
 /* ── OVERLAY BOXES ──────────────────────── */
 .overlay {
   position: fixed; inset: 0;
@@ -871,16 +928,21 @@ section.active { display: block; }
 <canvas id="glCanvas"></canvas>
 <div id="gridBg"></div>
 
+<div id="crtFlash"></div>
+
 <!-- TERMINAL -->
 <div id="terminal">
   <div id="termOutput"></div>
   <span id="termCursor"></span>
+  <div class="crt-scan" id="crtScan"></div>
 </div>
 
-<!-- WARNING 1 — SHADER PERFORMANCE -->
+<audio id="crtSfx" preload="auto" src="sfx/crt-boot.mp3"></audio>
+
+<!-- WARNING 1 - SHADER PERFORMANCE -->
 <div class="overlay" id="warn1">
   <div class="warn-box">
-    <div class="warn-header">WARNING — PERFORMANCE</div>
+    <div class="warn-header">WARNING - PERFORMANCE</div>
     <div class="warn-body">
       <strong>this site runs heavy WebGL shaders.</strong>
       these may cause slowdowns on low end hardware.<br>
@@ -893,10 +955,10 @@ section.active { display: block; }
   </div>
 </div>
 
-<!-- WARNING 2 — EPILEPSY -->
+<!-- WARNING 2 - EPILEPSY -->
 <div class="overlay" id="warn2">
   <div class="warn-box">
-    <div class="warn-header">WARNING — EPILEPSY</div>
+    <div class="warn-header">WARNING - EPILEPSY</div>
     <div class="warn-body">
       <strong>flashing / animated visuals ahead.</strong>
       this site contains animated background effects. if you are photosensitive or prone to seizures, these can be disabled entirely.<br><br>
@@ -927,7 +989,6 @@ section.active { display: block; }
     <div class="hero">
       <div class="hero-eyebrow">// ROBLOX DEVELOPER</div>
       <div class="hero-name">limi</div>
-      <div class="hero-role">Programmer &nbsp;·&nbsp; UI &nbsp;·&nbsp; VFX</div>
       <p class="hero-bio">
         hello! thank you for checking out my portfolio. im limi, a 16 year old programmer with 3 years of experience. my work focuses on networking, physics, and backend logic, and on syncing backend systems efficiently. you can check out my projects and videos in the tabs above, or head to the hire me tab if you're looking to commission work.
       </p>
@@ -1005,7 +1066,7 @@ section.active { display: block; }
       </div>
 
       <div class="video-card">
-        <div class="video-warn-bar">FLASHING LIGHTS — PHOTOSENSITIVITY WARNING</div>
+        <div class="video-warn-bar">FLASHING LIGHTS - PHOTOSENSITIVITY WARNING</div>
         <a class="video-thumb-link" href="https://www.youtube.com/watch?v=hZPPMVoav38" target="_blank" rel="noopener">
           <img src="https://img.youtube.com/vi/hZPPMVoav38/hqdefault.jpg" alt="Custom VFX System" loading="lazy">
           <div class="video-play-btn">
@@ -1017,14 +1078,14 @@ section.active { display: block; }
       </div>
 
       <div class="video-card">
-        <a class="video-thumb-link" href="https://youtu.be/os1wjdgd5PE" target="_blank" rel="noopener">
-          <img src="https://img.youtube.com/vi/os1wjdgd5PE/hqdefault.jpg" alt="Combat System" loading="lazy">
+        <a class="video-thumb-link" href="https://youtu.be/rqj9w6J4oxo" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/rqj9w6J4oxo/hqdefault.jpg" alt="Parry Combat System" loading="lazy">
           <div class="video-play-btn">
             <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
           </div>
           <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
         </a>
-        <div class="video-label">basic combat system made in about 4 hours. not exactly proud of this one as it couldve been far better</div>
+        <div class="video-label">this is a commissioned combat system for a game thats heavily based around parries. built a system so parries play out instantly no matter your ping, while still keeping solid anticheat. the client only shows what you did, then the server decides afterwards if it actually worked, by rewinding both players back to the moment they acted, which saves the massive round trip time. a parry at 150 ping gets judged exactly the same as one at 0, basically solving the ping issue parries normally have in games where parrying past 100 ping is usually outright impossible.</div>
       </div>
 
       <div class="video-card">
@@ -1036,6 +1097,17 @@ section.active { display: block; }
           <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
         </a>
         <div class="video-label">simple grid building and surface ui test.</div>
+      </div>
+
+      <div class="video-card">
+        <a class="video-thumb-link" href="https://youtu.be/DpElifYPeLg" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/DpElifYPeLg/hqdefault.jpg" alt="Command Based Ballistics System" loading="lazy">
+          <div class="video-play-btn">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+          </div>
+          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
+        </a>
+        <div class="video-label">a command based ballistics system made as an interview project.</div>
       </div>
 
     </div>
@@ -1095,9 +1167,18 @@ section.active { display: block; }
         <div class="hire-label">AVAILABILITY</div>
         <ul class="hire-list">
           <li>based in turkey. mostly free throughout the day unless already working on other commissions.</li>
-          <li>currently in a long term position, so only taking on one time commissions right now.</li>
+          <li>currently in a long term position, but that doesnt rule out taking on multiple long term positions at once, it really just comes down to the details. ive got a lot of free time on my hands right now and could use the extra income, so having more than one long term position at the same time isnt off the table.</li>
           <li>how many hours a day are dedicated to a commission is discussed and agreed on in detail beforehand.</li>
           <li>work is done as fast as reasonably possible, and any time im not free is communicated in advance along with why.</li>
+        </ul>
+      </div>
+
+      <div class="hire-block">
+        <div class="hire-label">AI USAGE</div>
+        <ul class="hire-list">
+          <li>in solo projects, ai is only ever used to help put together ui. everything else (systems, logic, networking, all of it) is still made entirely by me.</li>
+          <li>if youd rather ai not be touched anywhere in the project at all, just provide the ui assets yourself and it wont be used.</li>
+          <li>if ui assets arent provided, keep in mind im not a ui artist: the ui i put together on my own wont look great, or ill end up using ai for it instead.</li>
         </ul>
       </div>
 
@@ -1153,6 +1234,23 @@ section.active { display: block; }
 <script>
 let quality = 'high';
 
+const term = document.getElementById('terminal');
+const crtFlash = document.getElementById('crtFlash');
+const crtScan = document.getElementById('crtScan');
+const crtSfx = document.getElementById('crtSfx');
+
+function playCrtSfx() {
+  if (!crtSfx) return;
+  crtSfx.currentTime = 0;
+  const p = crtSfx.play();
+  if (p && p.catch) p.catch(() => { /* blocked until user interacts, ignore */ });
+}
+
+// fast CRT power-on burst, plays once on first load
+term.classList.add('crt-boot');
+crtFlash.classList.add('play');
+playCrtSfx();
+
 const out = document.getElementById('termOutput');
 
 function line(text, cls = '') {
@@ -1172,7 +1270,7 @@ const phase1 = [
   [250, 'gpu  WebGL 2.0 context .................. OK',    'term-ok'],
   [310, '',                                 ''],
   [360, 'mount  /portfolio/projects ............. 3 items','term-ok'],
-  [400, 'mount  /portfolio/videos ............... 3 items','term-ok'],
+  [400, 'mount  /portfolio/videos ............... 5 items','term-ok'],
   [430, 'mount  /portfolio/packages ............. 1 item', 'term-ok'],
   [460, 'mount  /portfolio/shaders .............. ready', 'term-ok'],
   [510, '',                                 ''],
