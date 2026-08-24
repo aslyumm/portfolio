@@ -3,7 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>limi</title>
+
+<title>limi · Roblox networking &amp; simulation programmer</title>
+<meta name="description" content="Server-authoritative networking, lag compensation and large-scale simulation for Roblox. Commissions open. Reply within 24h on Discord.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="limi · Roblox networking &amp; simulation programmer">
+<meta property="og:description" content="Combat that feels the same at 150 ping as at 0. Server-authoritative systems, lag compensation, large-scale simulation. Commissions open.">
+<meta property="og:image" content="https://img.youtube.com/vi/rqj9w6J4oxo/maxresdefault.jpg">
+<meta property="og:url" content="https://aslyumm.github.io/portfolio/">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="limi · Roblox networking &amp; simulation programmer">
+<meta name="twitter:description" content="Combat that feels the same at 150 ping as at 0. Server-authoritative systems, lag compensation, large-scale simulation.">
+<meta name="twitter:image" content="https://img.youtube.com/vi/rqj9w6J4oxo/maxresdefault.jpg">
+<meta name="theme-color" content="#000000">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Crect x='9' y='7' width='2.5' height='18' fill='%23fff'/%3E%3Crect x='16' y='13' width='2.5' height='12' fill='%23fff'/%3E%3Crect x='16' y='7' width='2.5' height='3' fill='%23fff'/%3E%3C/svg%3E">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "limi",
+  "alternateName": "aslyumm",
+  "url": "https://aslyumm.github.io/portfolio/",
+  "jobTitle": "Roblox programmer, networking & simulation",
+  "description": "Server-authoritative systems, lag compensation, anticheat and large-scale simulation for Roblox games.",
+  "knowsAbout": ["Roblox", "Luau", "client-side prediction", "lag compensation", "server-authoritative networking", "anticheat", "large-scale simulation"],
+  "sameAs": [
+    "https://github.com/aslyumm",
+    "https://devforum.roblox.com/u/aslyumm"
+  ],
+  "makesOffer": {
+    "@type": "Offer",
+    "itemOffered": {
+      "@type": "Service",
+      "name": "Roblox backend & networking commissions",
+      "serviceType": "Game programming"
+    },
+    "priceCurrency": "USD",
+    "priceSpecification": { "@type": "PriceSpecification", "minPrice": 50, "priceCurrency": "USD" }
+  }
+}
+</script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Mono:wght@300;400;500&display=swap');
 
@@ -12,1408 +56,1739 @@
 :root {
   --bg: #000;
   --fg: #fff;
-  --dim: #444;
-  --mid: #888;
-  --border: #222;
+  --dim: #6f6f6f;        /* was #4a4a4a, now passes AA at these sizes */
+  --mid: #9a9a9a;
+  --soft: #b0b0b0;
+  --border: #1f1f1f;
+  --border-hi: #383838;
   --hover-bg: rgba(255,255,255,0.04);
   --mono: 'Share Tech Mono', monospace;
   --body: 'DM Mono', monospace;
+  --pad-x: clamp(20px, 6vw, 80px);
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
 
 body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--body);
-  overflow: hidden;
-  height: 100vh;
+  font-size: 13px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── CANVAS ─────────────────────────────── */
+a { color: inherit; }
+:focus-visible { outline: 1px solid #fff; outline-offset: 3px; }
+
+/* ── VOICE: lowercase prose, uppercase system labels ──
+   Prose is authored in sentence case; the .lower class on <body>
+   renders it lowercase. Structural labels (nav, eyebrows, tags,
+   est labels) are never touched, so the case hierarchy survives.
+   Money + FAQ copy is deliberately left OUT of .prose.          */
+body.lower .prose { text-transform: lowercase; }
+
+/* ── AMBIENT BACKGROUND ─────────────────── */
 #glCanvas {
   position: fixed; inset: 0;
   z-index: 0;
   opacity: 0;
   transition: opacity 1.2s ease;
-  image-rendering: pixelated;
+  pointer-events: none;
 }
-#glCanvas.visible { opacity: 0.28; }
+#glCanvas.visible { opacity: 0.22; }
 
 #gridBg {
   position: fixed; inset: 0;
   z-index: 0;
   display: none;
+  pointer-events: none;
   background-image:
-    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
   background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
 }
+#gridBg.visible { display: block; }
 
-/* ── TERMINAL ───────────────────────────── */
-#terminal {
+/* ── BOOT ───────────────────────────────── */
+#boot {
   position: fixed; inset: 0;
   background: #000;
-  z-index: 200;
+  z-index: 400;
   display: flex;
   flex-direction: column;
-  padding: clamp(24px, 5vw, 60px);
+  justify-content: flex-end;
+  padding: var(--pad-x);
   font-family: var(--mono);
-  font-size: clamp(11px, 1.4vw, 14px);
+  font-size: 12px;
   line-height: 1.7;
-  color: #fff;
-  overflow: hidden;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.5s ease;
 }
-
-#terminal.fade-out { opacity: 0; pointer-events: none; }
-
-#termOutput { flex: 1; overflow: hidden; }
-
-.term-line { display: block; }
-.term-ok    { color: #fff; }
-.term-dim   { color: #555; }
-.term-cmd   { color: #aaa; }
-
-#termCursor {
-  display: inline-block;
-  width: 9px; height: 14px;
-  background: #fff;
-  vertical-align: middle;
-  margin-left: 2px;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink { 50% { opacity: 0; } }
-
-/* ── CRT BOOT ───────────────────────────── */
-#crtFlash {
-  position: fixed; inset: 0;
-  z-index: 260;
-  background: #fff;
-  opacity: 0;
-  pointer-events: none;
-}
-
-@keyframes crtFlashAnim {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-#crtFlash.play {
-  animation: crtFlashAnim 0.4s ease-out forwards;
-}
-
-#terminal.crt-boot {
-  animation: crtBootIn 0.48s ease-out both;
-  transform-origin: center center;
-}
-
-@keyframes crtBootIn {
-  0%   { transform: scaleY(0.008); filter: brightness(6) contrast(2.2); }
-  12%  { transform: scaleY(0.008); filter: brightness(6) contrast(2.2); }
-  40%  { transform: scaleY(1);     filter: brightness(3) contrast(1.5); }
-  100% { transform: scaleY(1);     filter: brightness(1) contrast(1); }
-}
-
-.crt-scan {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 5;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.05) 0px,
-    rgba(255,255,255,0.05) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  mix-blend-mode: overlay;
-  opacity: 0.85;
-  animation: crtFlicker 0.15s steps(2) infinite;
-  transition: opacity 0.25s ease;
-}
-
-.crt-scan.off {
-  opacity: 0;
-  animation: none;
-}
-
-@keyframes crtFlicker {
-  0%, 100% { opacity: 0.7; }
-  50%      { opacity: 1; }
-}
-
-/* ── OVERLAY BOXES ──────────────────────── */
-.overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.88);
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-.overlay.show { opacity: 1; pointer-events: all; }
-
-.warn-box {
-  border: 1px solid #fff;
-  padding: 0;
-  max-width: 520px;
-  width: 90%;
-  background: #000;
-  font-family: var(--mono);
-}
-
-.warn-header {
-  border-bottom: 1px solid #fff;
-  padding: 14px 24px;
-  font-size: 11px;
-  letter-spacing: 5px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.warn-header::before {
-  content: '⚠';
-  font-size: 16px;
-}
-
-.warn-body {
-  padding: 28px 24px;
-  font-size: 13px;
-  line-height: 1.8;
-  color: #aaa;
-}
-
-.warn-body strong { color: #fff; display: block; margin-bottom: 8px; }
-
-.warn-footer {
-  border-top: 1px solid #222;
-  padding: 16px 24px;
-  display: flex;
-  gap: 2px;
-}
-
-.btn {
-  padding: 10px 28px;
-  border: 1px solid #fff;
-  background: #000;
-  color: #fff;
-  font-family: var(--mono);
-  font-size: 11px;
+#boot.gone { opacity: 0; pointer-events: none; }
+#bootOut { color: #8a8a8a; }
+#bootOut b { color: #fff; font-weight: 400; }
+.boot-skip {
+  position: absolute;
+  top: var(--pad-x); right: var(--pad-x);
+  font-size: 10px;
   letter-spacing: 4px;
+  color: #999;
+  background: none;
+  border: 1px solid #333;
+  padding: 8px 14px;
+  font-family: var(--mono);
   cursor: pointer;
-  transition: background 0.1s, color 0.1s;
 }
-.btn:hover { background: #fff; color: #000; }
-.btn + .btn { border-left: none; }
-
-/* ── MAIN ───────────────────────────────── */
-#main {
-  position: fixed; inset: 0;
-  overflow-y: auto;
-  z-index: 10;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.9s ease;
-  display: block;
-}
-
-#main.visible { opacity: 1; pointer-events: all; }
+.boot-skip:hover { color: #fff; border-color: #fff; }
 
 /* ── NAV ────────────────────────────────── */
 nav {
   position: sticky; top: 0;
-  background: rgba(0,0,0,0.92);
+  background: rgba(0,0,0,0.9);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: stretch;
-  z-index: 50;
-  font-family: var(--mono);
-}
-
-.nav-logo {
-  padding: 18px 32px;
-  font-size: 14px;
-  letter-spacing: 8px;
-  border-right: 1px solid var(--border);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
+  z-index: 50;
+  font-family: var(--mono);
+  height: 64px;
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+  gap: 8px;
 }
 
-.nav-tabs {
-  margin-left: auto;
-  display: flex;
-}
-
-.nav-tab {
-  padding: 22px 36px;
-  font-size: 13px;
-  letter-spacing: 5px;
-  color: #999;
-  cursor: pointer;
-  border-left: 1px solid var(--border);
+.nav-logo { font-size: 14px; letter-spacing: 8px; margin-right: auto; }
+.nav-links { display: flex; gap: 2px; }
+.nav-links a {
+  padding: 10px 14px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #9a9a9a;
+  text-decoration: none;
   transition: color 0.15s, background 0.15s;
-  user-select: none;
+}
+.nav-links a:hover { color: #fff; background: var(--hover-bg); }
+
+.nav-hire {
+  border: 1px solid #fff;
+  background: #fff;
+  color: #000 !important;
+  padding: 10px 18px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-decoration: none;
+  margin-left: 10px;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-hire:hover { background: #000; color: #fff !important; }
+
+.nav-btn {
+  border: 1px solid var(--border-hi);
+  background: none;
+  color: #8a8a8a;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 9px 11px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+.nav-btn:hover { color: #fff; border-color: #fff; }
+.nav-toggle { display: none; }
+
+@media (max-width: 860px) {
+  nav { padding-left: 20px; padding-right: 20px; }
+  .nav-links {
+    position: absolute; top: 64px; left: 0; right: 0;
+    background: #000;
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    padding: 8px 0;
+  }
+  .nav-links:not(.open) { display: none; }
+  .nav-links a { padding: 14px 20px; }
+  .nav-toggle {
+    display: block;
+    background: none; border: 1px solid var(--border-hi);
+    color: #fff; font-family: var(--mono); font-size: 11px;
+    letter-spacing: 3px; padding: 9px 12px; cursor: pointer;
+  }
+  .nav-hire { display: none; }
 }
 
-.nav-tab:hover { color: #fff; background: var(--hover-bg); }
-.nav-tab.active { color: #fff; }
+/* ── LAYOUT PRIMITIVES ──────────────────── */
+main { position: relative; z-index: 10; }
 
-/* ── SECTIONS ───────────────────────────── */
-section { display: none; }
-section.active { display: block; }
+.band { padding: clamp(56px, 9vw, 110px) var(--pad-x); border-top: 1px solid var(--border); }
+.band-head { margin-bottom: 44px; max-width: 620px; }
 
-/* ── HERO ───────────────────────────────── */
-.hero {
-  min-height: calc(100vh - 56px);
-  padding: clamp(40px, 8vw, 100px) clamp(24px, 6vw, 80px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-}
-
-.hero-eyebrow {
+.eyebrow {
+  font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 6px;
   color: var(--dim);
-  margin-bottom: 28px;
-  font-family: var(--mono);
+  margin-bottom: 14px;
 }
 
-.hero-name {
-  font-size: clamp(72px, 14vw, 160px);
+h2 {
   font-family: var(--mono);
+  font-size: clamp(26px, 4vw, 40px);
   font-weight: 400;
-  letter-spacing: -3px;
-  line-height: 0.95;
-  margin-bottom: 28px;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 14px;
 }
 
-.hero-role {
-  font-size: 11px;
-  letter-spacing: 8px;
-  color: var(--dim);
-  margin-bottom: 52px;
-  font-family: var(--mono);
-  text-transform: uppercase;
-}
+.band-sub { color: var(--mid); max-width: 560px; }
 
-.hero-bio {
-  max-width: 520px;
-  font-size: 13px;
-  line-height: 1.9;
-  color: #999;
-  margin-bottom: 52px;
-}
-
-.hero-discord {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid #555;
-  padding: 14px 26px;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 4px;
-  color: #bbb;
-  background: rgba(255,255,255,0.03);
-}
-
-.hero-discord span { color: #fff; font-size: 14px; letter-spacing: 2px; }
-
-.hero-ctas {
+/* ── HERO ───────────────────────────────── */
+.hero {
+  min-height: calc(100vh - 64px);
+  padding: clamp(48px, 8vw, 90px) var(--pad-x) 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 52px;
+  flex-direction: column;
+  justify-content: center;
 }
-.hero-ctas .hero-discord { margin-bottom: 0; }
 
-.hero-hire-btn {
+.hero-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 6px; color: var(--dim); margin-bottom: 26px; }
+
+.hero h1 {
+  font-family: var(--mono);
+  font-size: clamp(38px, 6.4vw, 76px);
+  font-weight: 400;
+  letter-spacing: -2px;
+  line-height: 1.03;
+  max-width: 15ch;
+  margin-bottom: 26px;
+}
+.hero h1 em { font-style: normal; color: #6a6a6a; }
+
+.hero-bio { max-width: 540px; color: var(--soft); margin-bottom: 38px; }
+
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 56px; }
+
+.btn-solid, .btn-ghost {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #fff;
-  padding: 14px 26px;
+  gap: 10px;
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 4px;
-  color: #000;
-  background: #fff;
+  padding: 15px 26px;
+  text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  user-select: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.hero-hire-btn:hover { background: #000; color: #fff; }
+.btn-solid { background: #fff; color: #000; border: 1px solid #fff; }
+.btn-solid:hover { background: #000; color: #fff; }
+.btn-ghost { background: transparent; color: #c4c4c4; border: 1px solid #4a4a4a; }
+.btn-ghost:hover { color: #fff; border-color: #fff; background: var(--hover-bg); }
 
-/* ── STATS ──────────────────────────────── */
-.stats {
+/* ── PROOF STRIP ────────────────────────── */
+.proof {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--border);
   margin-top: auto;
 }
-
-.stat {
-  padding: 28px 0;
-  border-right: 1px solid var(--border);
-}
-.stat:last-child { border-right: none; }
-
-.stat-n {
-  font-size: clamp(24px, 3vw, 36px);
+.proof-item { padding: 26px 22px 30px 0; border-right: 1px solid var(--border); }
+.proof-item:last-child { border-right: none; }
+.proof-n {
   font-family: var(--mono);
-  font-weight: 400;
-  margin-bottom: 6px;
+  font-size: clamp(20px, 2.6vw, 30px);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.proof-l { font-size: 11px; color: var(--dim); line-height: 1.6; letter-spacing: 0.5px; }
+
+@media (max-width: 720px) {
+  .proof { grid-template-columns: repeat(2, 1fr); }
+  .proof-item:nth-child(2) { border-right: none; }
+  .proof-item:nth-child(1), .proof-item:nth-child(2) { border-bottom: 1px solid var(--border); }
 }
 
-.stat-l {
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: var(--dim);
-  font-family: var(--mono);
-}
-
-/* ── PAGE HEADER ────────────────────────── */
-.page-head {
-  padding: clamp(40px, 6vw, 80px) clamp(24px, 6vw, 80px) 40px;
-}
-
-.page-tag {
-  font-size: 10px;
-  letter-spacing: 6px;
-  color: var(--dim);
-  font-family: var(--mono);
-  margin-bottom: 14px;
-}
-
-.page-title {
-  font-size: clamp(28px, 5vw, 48px);
-  font-family: var(--mono);
-  font-weight: 400;
-  letter-spacing: -1px;
-}
-
-/* ── PROJECTS ───────────────────────────── */
-.projects-grid {
-  padding: 40px clamp(24px, 6vw, 80px) 80px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.project-card {
-  background: var(--bg);
-  padding: 32px;
-  transition: background 0.15s;
-  display: flex;
-  flex-direction: column;
+/* ── CASE STUDIES ───────────────────────── */
+.case {
   border: 1px solid var(--border);
+  margin-bottom: 20px;
+  background: rgba(0,0,0,0.55);
 }
+.case-top { display: grid; grid-template-columns: 1.15fr 1fr; }
+.case-media, .case-intro { min-width: 0; }
+.case-media { border-right: 1px solid var(--border); min-height: 220px; }
+.case-intro { padding: clamp(22px, 3vw, 34px); display: flex; flex-direction: column; }
 
-.project-card:hover { background: var(--hover-bg); }
-
-.project-thumb {
-  width: 100%;
-  aspect-ratio: 16/9;
-  border: 1px solid #1a1a1a;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.case-kicker {
+  font-family: var(--mono);
   font-size: 9px;
   letter-spacing: 4px;
-  color: #2a2a2a;
+  color: var(--dim);
+  margin-bottom: 12px;
+}
+.case h3 {
   font-family: var(--mono);
-  position: relative;
-  overflow: hidden;
-  background: #070707;
-}
-
-.project-thumb::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 3px
-  );
-}
-
-/* Roblox icon placeholder */
-.project-thumb svg {
-  width: 32px; height: 32px;
-  opacity: 0.15;
-}
-
-.proj-role {
-  display: inline-block;
-  border: 1px solid #2a2a2a;
-  font-size: 9px;
-  letter-spacing: 4px;
-  padding: 4px 10px;
-  color: #555;
-  font-family: var(--mono);
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
   margin-bottom: 14px;
 }
+.case-line { color: var(--soft); font-size: 12.5px; }
 
-.proj-name {
-  font-size: 17px;
+.case-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 22px; }
+.case-tag {
   font-family: var(--mono);
-  font-weight: 400;
-  margin-bottom: 6px;
-  letter-spacing: 0.5px;
-}
-
-.proj-date {
-  font-size: 10px;
-  color: var(--dim);
+  font-size: 9px;
   letter-spacing: 3px;
+  color: #8a8a8a;
+  border: 1px solid var(--border);
+  padding: 4px 9px;
+}
+
+.case-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); }
+
+/* mechanics shipped inside a case */
+.case-mech { border-top: 1px solid var(--border); padding: clamp(20px, 2.4vw, 28px); }
+.case-mech h4 {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 4px;
+  color: var(--dim); font-weight: 400; margin-bottom: 14px;
+}
+.mech-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px 30px; }
+.mech-list div { font-size: 12.5px; color: #a4a4a4; }
+.mech-list b { color: #fff; font-weight: 400; }
+.case-cell { padding: clamp(20px, 2.4vw, 28px); border-right: 1px solid var(--border); }
+.case-cell:last-child { border-right: none; }
+.case-cell h4 {
   font-family: var(--mono);
-  margin-bottom: 16px;
-}
-
-.proj-desc {
-  font-size: 12px;
-  color: #777;
-  line-height: 1.8;
-  flex: 1;
-}
-
-.proj-link {
-  display: inline-block;
-  margin-top: 20px;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 4px;
-  color: #444;
-  font-family: var(--mono);
-  text-decoration: none;
-  border-bottom: 1px solid #2a2a2a;
-  padding-bottom: 2px;
-  transition: color 0.15s, border-color 0.15s;
-  width: fit-content;
+  color: var(--dim);
+  font-weight: 400;
+  margin-bottom: 12px;
+}
+.case-cell p { font-size: 12.5px; color: #a4a4a4; }
+.case-cell.result p { color: #fff; }
+
+@media (max-width: 860px) {
+  .case-top { grid-template-columns: 1fr; }
+  .case-media { border-right: none; border-bottom: 1px solid var(--border); min-height: 0; }
+  .case-grid { grid-template-columns: 1fr; }
+  .case-cell { border-right: none; border-bottom: 1px solid var(--border); }
+  .case-cell:last-child { border-bottom: none; }
 }
 
-.proj-link:hover { color: #fff; border-color: #fff; }
-
-/* ── VIDEO THUMB ─────────────────────────── */
-.video-thumb-link {
+/* video thumb */
+.thumb {
   display: block;
   position: relative;
   aspect-ratio: 16/9;
-  background: #080808;
+  background: #070707;
   overflow: hidden;
   text-decoration: none;
+  width: 100%;
+  height: 100%;
 }
-
-.video-thumb-link img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-  opacity: 0.85;
-  transition: opacity 0.2s;
-}
-
-.video-thumb-link:hover img { opacity: 1; }
-
-.video-play-btn {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.8; transition: opacity 0.2s; }
+.thumb:hover img { opacity: 1; }
+.thumb-play {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.35);
   transition: background 0.2s;
 }
-
-.video-thumb-link:hover .video-play-btn { background: rgba(0,0,0,0.15); }
-
-.video-play-btn svg {
-  width: 56px; height: 56px;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 12px rgba(0,0,0,0.8));
-  transition: transform 0.2s, opacity 0.2s;
+.thumb:hover .thumb-play { background: rgba(0,0,0,0.12); }
+.thumb-play svg { width: 52px; height: 52px; transition: transform 0.2s; }
+.thumb:hover .thumb-play svg { transform: scale(1.07); }
+.thumb-tag {
+  position: absolute; bottom: 10px; right: 12px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
+  color: rgba(255,255,255,0.7);
 }
 
-.video-thumb-link:hover .video-play-btn svg { transform: scale(1.08); opacity: 1; }
+/* ── EVIDENCE BLOCK (charts + demo) ─────── */
+.evidence { border-top: 1px solid var(--border); padding: clamp(22px, 3vw, 32px); }
+.ev-head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline; margin-bottom: 6px; }
+.ev-label { font-family: var(--mono); font-size: 9px; letter-spacing: 4px; color: var(--dim); }
+.ev-title { font-family: var(--mono); font-size: 15px; }
+.ev-sub { font-size: 11.5px; color: #8a8a8a; max-width: 640px; margin-bottom: 22px; }
 
-.video-yt-label {
-  position: absolute;
-  bottom: 10px; right: 12px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: rgba(255,255,255,0.5);
+.ctrl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 20px; }
+.ctrl {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--border); padding: 12px 16px;
+  flex: 1 1 260px; min-width: 240px;
 }
-.videos-grid {
-  padding: 0 clamp(24px, 6vw, 80px) 80px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
-  border-top: 1px solid var(--border);
-  padding-top: 40px;
-}
+.ctrl-k { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); white-space: nowrap; }
+.ctrl-v { font-family: var(--mono); font-size: 13px; min-width: 72px; text-align: right; }
 
-.video-card {
-  border: 1px solid var(--border);
-  background: #050505;
-  display: flex;
-  flex-direction: column;
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 2px; background: #3a3a3a; cursor: pointer;
 }
-
-.video-warn-bar {
-  border-bottom: 1px solid var(--border);
-  padding: 10px 16px;
-  font-size: 9px;
-  letter-spacing: 4px;
-  color: #666;
-  font-family: var(--mono);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 13px; height: 13px; background: #fff; border-radius: 0; cursor: pointer;
 }
+input[type=range]::-moz-range-thumb { width: 13px; height: 13px; background: #fff; border: 0; border-radius: 0; cursor: pointer; }
 
-.video-warn-bar::before { content: '⚠'; font-size: 12px; }
-
-.video-embed {
-  position: relative;
-  aspect-ratio: 16/9;
-  background: #080808;
-}
-
-.video-embed iframe {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  border: none;
-}
-
-.video-label {
-  padding: 14px 18px;
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: #555;
-  font-family: var(--mono);
-  border-top: 1px solid #111;
-}
-
-.video-recommended-tag {
-  padding: 10px 18px;
-  font-size: 9px;
-  letter-spacing: 4px;
-  color: #fff;
-  font-family: var(--mono);
-  border-top: 1px solid #111;
-  background: rgba(255,255,255,0.05);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-@keyframes recommendedPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.35); border-color: var(--border); }
-  50% { box-shadow: 0 0 28px 2px rgba(255,255,255,0.3); border-color: #fff; }
-}
-
-.video-card-featured {
-  animation: recommendedPulse 2.6s ease-in-out infinite;
-}
-
-.video-fallback {
-  display: block;
-  padding: 10px 18px 14px;
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: #333;
-  font-family: var(--mono);
-  text-decoration: none;
-  border-top: 1px solid #0d0d0d;
-  transition: color 0.15s;
-}
-.video-fallback:hover { color: #777; }
-.video-fallback::before { content: '↗ '; }
-
-.pkg-viewer {
-  position: relative;
-  padding: 20px clamp(24px, 6vw, 80px) 30px;
-  display: flex;
-  align-items: stretch;
-  gap: 14px;
-}
-
-.pkg-arrow {
-  flex: 0 0 auto;
-  width: 54px;
-  border: 1px solid var(--border);
-  background: #050505;
-  color: #777;
-  font-family: var(--mono);
-  font-size: 22px;
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-  user-select: none;
-}
-.pkg-arrow:hover { color: #fff; background: var(--hover-bg); border-color: #fff; }
-.pkg-arrow:active { background: rgba(255,255,255,0.08); }
-
-.pkg-stage {
-  flex: 1 1 auto;
-  position: relative;
-  min-height: calc(100vh - 320px);
-  border: 1px solid var(--border);
-  background: #050505;
-  overflow: hidden;
-}
-
-.pkg-stage::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 3px
-  );
-  pointer-events: none;
-  z-index: 3;
-}
-
-.pkg-panel {
-  position: absolute;
-  inset: 0;
-  padding: clamp(22px, 4vw, 44px);
-  display: none;
-  flex-direction: column;
-  opacity: 0;
-  transform: translateX(24px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-  overflow-y: auto;
-}
-.pkg-panel.active {
-  display: flex;
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.pkg-header {
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 20px;
-  margin-bottom: 26px;
-}
-
-.pkg-index {
-  font-size: 10px;
-  letter-spacing: 5px;
-  color: var(--dim);
-  font-family: var(--mono);
-  margin-bottom: 14px;
-}
-
-.pkg-name {
-  font-size: clamp(22px, 3.4vw, 34px);
-  font-family: var(--mono);
-  font-weight: 400;
-  letter-spacing: -1px;
-  margin-bottom: 14px;
-}
-
-.pkg-install {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: #999;
-  border: 1px solid var(--border);
-  padding: 7px 13px;
-  background: #000;
-}
-.pkg-install span { color: #555; }
-
-.pkg-grid {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: 30px;
-  flex: 1;
-}
-
-.pkg-demo-box {
-  position: absolute; inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 6px;
-  color: #2f2f2f;
-}
-
-.pkg-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.pkg-section-label {
-  font-size: 9px;
-  letter-spacing: 4px;
-  color: var(--dim);
-  font-family: var(--mono);
-  margin-bottom: 12px;
-}
-
-.pkg-explanation {
-  font-size: 12px;
-  line-height: 1.9;
-  color: #999;
-}
-
-.pkg-links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 26px;
-}
-
-.pkg-link {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: #666;
-  text-decoration: none;
-  border: 1px solid var(--border);
-  padding: 13px 16px;
+.btn-mini {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  background: none; color: #c0c0c0; border: 1px solid var(--border-hi);
+  padding: 12px 18px; cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.pkg-link:hover { color: #fff; border-color: #fff; background: var(--hover-bg); }
+.btn-mini:hover { color: #fff; border-color: #fff; background: var(--hover-bg); }
+.btn-mini.primary { background: #fff; color: #000; border-color: #fff; }
+.btn-mini.primary:hover { background: #000; color: #fff; }
 
-.pkg-dots {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 4px 0 60px;
+/* ping demo lanes */
+.lanes { display: grid; gap: 12px; }
+.lane { border: 1px solid var(--border); padding: 16px 18px 18px; }
+.lane.good { border-color: #3d3d3d; }
+.lane-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.lane-name { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: #d0d0d0; }
+.lane-verdict { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--dim); }
+.lane-verdict.hit { color: #fff; }
+.lane-verdict.miss { color: #fff; opacity: 0.55; text-decoration: line-through; }
+
+.track { position: relative; height: 34px; border: 1px solid var(--border); background: #050505; overflow: hidden; }
+.track-window { position: absolute; top: 0; bottom: 0; background: rgba(255,255,255,0.10); border-left: 1px solid #666; border-right: 1px solid #666; }
+.track-window::after {
+  content: 'WINDOW'; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 1px; color: #cfcfcf; white-space: nowrap;
+}
+.track-attack { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; left: 0; }
+.track-input { position: absolute; top: 0; bottom: 0; width: 1px; background: #fff; opacity: 0; }
+.track-input.show { opacity: 0.75; }
+.track-input::after {
+  content: attr(data-tag);
+  position: absolute; top: 3px; left: 5px;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 2px; color: #cfcfcf; white-space: nowrap;
+}
+.track-input.flip::after { left: auto; right: 5px; }
+.lane-note { font-size: 11px; color: #8a8a8a; margin-top: 10px; }
+
+@media (max-width: 620px) {
+  .track-input::after { content: 'JUDGED'; }
+  .lane-head { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .ctrl-row .btn-mini { flex: 1 1 auto; }
+  .ctrl { min-width: 0; }
 }
 
-.pkg-dot {
-  width: 8px; height: 8px;
-  border: 1px solid #444;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.15s, border-color 0.15s;
+.readout { display: flex; flex-wrap: wrap; gap: 8px 26px; margin-top: 16px; }
+.readout div { font-family: var(--mono); font-size: 11px; color: #8a8a8a; }
+.readout b { color: #fff; font-weight: 400; }
+
+/* charts */
+.chart-wrap { border: 1px solid var(--border); padding: 16px; }
+.chart-wrap svg { display: block; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+.legend span { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: #9a9a9a; display: flex; align-items: center; gap: 8px; }
+.swatch { width: 18px; height: 0; border-top: 2px solid #fff; }
+.swatch.dash { border-top: 2px dashed #7a7a7a; }
+.swatch.solid-dim { border-top: 2px solid #7a7a7a; }
+
+.assumptions { margin-top: 16px; border-top: 1px solid var(--border); }
+.assumptions summary {
+  cursor: pointer; list-style: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  color: #8a8a8a; padding: 14px 0 0;
 }
-.pkg-dot:hover { border-color: #888; }
-.pkg-dot.active { background: #fff; border-color: #fff; }
+.assumptions summary::-webkit-details-marker { display: none; }
+.assumptions summary::before { content: '+ '; color: #666; }
+.assumptions[open] summary::before { content: '− '; }
+.assumptions summary:hover { color: #fff; }
+.assumptions .a-body { font-size: 11.5px; color: #8f8f8f; padding: 12px 0 4px; max-width: 720px; }
+.assumptions .a-body p + p { margin-top: 10px; }
+.assumptions code { font-family: var(--mono); color: #d8d8d8; font-size: 11px; }
 
-@media (max-width: 760px) {
-  .pkg-grid { grid-template-columns: 1fr; }
-  .pkg-arrow { width: 42px; font-size: 18px; }
-  .pkg-stage { min-height: calc(100vh - 300px); }
-}
-
-/* ── HIRE ME ────────────────────────────── */
-.hire-wrap {
-  padding: 0 clamp(24px, 6vw, 80px) 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-  max-width: 900px;
-}
-
-.hire-block { display: flex; flex-direction: column; }
-
-.hire-label {
-  font-size: 10px;
-  letter-spacing: 5px;
-  color: var(--dim);
-  font-family: var(--mono);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 16px;
-  margin-bottom: 20px;
+.honesty {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
+  color: #7a7a7a; border: 1px solid var(--border); padding: 4px 8px;
+  display: inline-block;
 }
 
-.hire-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ── HEADLINE STAT ABOVE A CHART ─────────── */
+.bigstat {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px;
+  border: 1px solid var(--border-hi); padding: 18px 20px; margin-bottom: 18px;
+}
+.bigstat-n { font-family: var(--mono); font-size: clamp(30px, 5vw, 44px); line-height: 1; }
+.bigstat-l { font-size: 12px; color: #a8a8a8; flex: 1 1 260px; line-height: 1.7; }
+.bigstat-l b { color: #fff; font-weight: 400; }
+
+.verdict-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.verdict {
+  flex: 1 1 240px; min-width: 0;
+  border: 1px solid var(--border); padding: 14px 16px;
+}
+.verdict-k { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); }
+.verdict-v { font-family: var(--mono); font-size: 14px; margin-top: 6px; color: #d8d8d8; }
+.verdict.over { border-color: var(--border-hi); }
+.verdict.over .verdict-v { color: #fff; opacity: 0.62; }
+.verdict.ok .verdict-v { color: #fff; }
+
+/* ── QUOTE SLOT ─────────────────────────── */
+.quote { border-top: 1px solid var(--border); padding: clamp(20px, 2.6vw, 28px); display: flex; gap: 18px; align-items: flex-start; }
+.quote.creed { border-top: none; border-bottom: 1px solid var(--border); }
+.quote.creed p { color: #fff; font-size: clamp(14px, 2vw, 17px); line-height: 1.7; }
+.quote-mark { font-family: var(--mono); font-size: 26px; color: #4a4a4a; line-height: 1; }
+.quote p { font-size: 13px; color: #d6d6d6; max-width: 700px; }
+.quote cite { display: block; font-style: normal; font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--dim); margin-top: 12px; }
+
+/* ── PACKAGE ────────────────────────────── */
+.pkg { border: 1px solid var(--border); display: grid; grid-template-columns: 1.1fr 1fr; }
+.pkg-media, .pkg-body { min-width: 0; }
+.pkg-media { border-right: 1px solid var(--border); }
+.pkg-body { padding: clamp(22px, 3vw, 36px); }
+.pkg-name { font-family: var(--mono); font-size: 26px; letter-spacing: -0.5px; margin-bottom: 12px; }
+.pkg-install {
+  display: inline-block; font-family: var(--mono); font-size: 11px;
+  color: #a8a8a8; border: 1px solid var(--border); padding: 8px 12px; margin-bottom: 20px;
+}
+.pkg-install span { color: #777; }
+.pkg-body p { color: var(--soft); font-size: 12.5px; margin-bottom: 24px; }
+.pkg-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.pkg-links a {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  color: #9a9a9a; text-decoration: none;
+  border: 1px solid var(--border); padding: 11px 14px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.pkg-links a:hover { color: #fff; border-color: #fff; background: var(--hover-bg); }
+@media (max-width: 860px) {
+  .pkg { grid-template-columns: 1fr; }
+  .pkg-media { border-right: none; border-bottom: 1px solid var(--border); }
 }
 
-.hire-list li {
-  font-size: 13px;
-  line-height: 1.8;
-  color: #999;
-  padding-left: 18px;
-  position: relative;
-}
-
-.hire-list li::before {
-  content: '›';
-  position: absolute;
-  left: 0;
-  color: #444;
-}
-
-.hire-tiers {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.hire-tier {
+/* ── SMALL WORK GRID ────────────────────── */
+.work-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.work-card {
   border: 1px solid var(--border);
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 26px;
+  display: flex; flex-direction: column;
   transition: background 0.15s;
 }
-.hire-tier:hover { background: var(--hover-bg); }
+.work-card:hover { background: var(--hover-bg); }
+.work-card h3 { font-family: var(--mono); font-size: 16px; font-weight: 400; margin-bottom: 10px; }
+.work-card p { font-size: 12px; color: #999; flex: 1; }
+.work-card .work-link {
+  margin-top: 18px; font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  color: #8a8a8a; text-decoration: none; border-bottom: 1px solid var(--border-hi);
+  padding-bottom: 3px; width: fit-content;
+}
+.work-card .work-link:hover { color: #fff; border-color: #fff; }
 
-.hire-tier-name {
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: var(--dim);
-  font-family: var(--mono);
+/* ── DIAGNOSTIC ESTIMATOR ───────────────── */
+.est { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: start; }
+.est-panel { border: 1px solid var(--border); }
+.est-group { border-bottom: 1px solid var(--border); padding: 24px clamp(18px, 2.4vw, 28px); }
+.est-group:last-child { border-bottom: none; }
+.est-label { font-family: var(--mono); font-size: 9px; letter-spacing: 4px; color: var(--dim); margin-bottom: 6px; }
+.est-hint { font-size: 11.5px; color: #8a8a8a; margin-bottom: 16px; }
+
+.opt {
+  position: relative;
+  display: flex; align-items: baseline; gap: 14px;
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.opt:last-child { margin-bottom: 0; }
+.opt:hover { border-color: var(--border-hi); background: var(--hover-bg); }
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt-mark { flex: 0 0 auto; width: 11px; height: 11px; border: 1px solid #6a6a6a; margin-top: 4px; }
+.opt input:checked ~ .opt-mark { background: #fff; border-color: #fff; }
+.opt input:focus-visible ~ .opt-mark { outline: 1px solid #fff; outline-offset: 3px; }
+.opt:has(input:checked) { border-color: #fff; background: rgba(255,255,255,0.05); }
+.opt-text { flex: 1; min-width: 0; }
+.opt-text .opt-name, .opt-text .opt-note { display: block; }
+.opt-name { font-size: 13px; color: #ddd; }
+.opt:has(input:checked) .opt-name { color: #fff; }
+.opt-note { font-size: 11px; color: #8a8a8a; line-height: 1.6; margin-top: 4px; }
+
+.est-out { border: 1px solid var(--border); position: sticky; top: 84px; }
+.est-out-head {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 4px;
+  color: var(--dim); padding: 18px 22px; border-bottom: 1px solid var(--border);
+}
+.est-body { padding: 20px 22px; min-height: 140px; }
+.est-empty { font-size: 12px; color: #7a7a7a; }
+.diag-label { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin: 4px 0 8px; }
+.diag-list { list-style: none; margin-bottom: 20px; }
+.diag-list li { font-size: 12px; color: #b4b4b4; padding: 6px 0 6px 14px; position: relative; }
+.diag-list li::before { content: '›'; position: absolute; left: 0; color: #6a6a6a; }
+.est-line { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; color: #a4a4a4; padding: 5px 0; }
+.est-line span:last-child { font-family: var(--mono); color: #d4d4d4; white-space: nowrap; }
+
+.est-total { border-top: 1px solid var(--border); padding: 22px; }
+.est-total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.est-total-row .k { font-family: var(--mono); font-size: 10px; letter-spacing: 4px; color: var(--dim); }
+.est-usd { font-family: var(--mono); font-size: 30px; line-height: 1; }
+.est-rbx, .est-time { font-family: var(--mono); font-size: 14px; color: #9a9a9a; }
+.est-terms { font-size: 11px; color: #8a8a8a; margin-top: 16px; line-height: 1.7; }
+.est-off {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
+  color: #000; background: #fff; padding: 6px 10px;
+  display: inline-block; margin-bottom: 14px;
+}
+.est-was { font-family: var(--mono); font-size: 12px; color: #7a7a7a; text-decoration: line-through; }
+.est-out .btn-solid { width: 100%; justify-content: center; margin-top: 18px; }
+.est-out .btn-mini { width: 100%; margin-top: 8px; }
+.est-foot { font-size: 11.5px; color: #8a8a8a; margin-top: 20px; max-width: 640px; }
+
+@media (max-width: 900px) {
+  .est { grid-template-columns: 1fr; }
+  .est-out { position: static; }
 }
 
-.hire-tier-price {
-  font-size: 20px;
-  font-family: var(--mono);
-  color: #fff;
-}
+/* ── PROCESS ────────────────────────────── */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.step { background: #000; padding: 26px 22px; }
+.step-n { font-family: var(--mono); font-size: 10px; letter-spacing: 4px; color: var(--dim); margin-bottom: 14px; }
+.step h3 { font-family: var(--mono); font-size: 15px; font-weight: 400; margin-bottom: 10px; }
+.step p { font-size: 12px; color: #999; }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
 
-.hire-tier-desc {
-  font-size: 12px;
-  line-height: 1.8;
-  color: #777;
+/* ── FAQ ────────────────────────────────── */
+.faq { border-top: 1px solid var(--border); max-width: 820px; }
+.faq details { border-bottom: 1px solid var(--border); }
+.faq summary {
+  cursor: pointer; list-style: none;
+  padding: 20px 40px 20px 0;
+  font-size: 13.5px; color: #e4e4e4; position: relative;
 }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: '+';
+  position: absolute; right: 8px; top: 18px;
+  font-family: var(--mono); font-size: 16px; color: #777;
+}
+.faq details[open] summary::after { content: '−'; }
+.faq summary:hover { color: #fff; }
+.faq-body { padding: 0 40px 24px 0; color: #a2a2a2; font-size: 12.5px; }
+.faq-body p + p { margin-top: 12px; }
 
-.hire-cta {
+/* ── CONTACT ────────────────────────────── */
+.contact-wrap { display: flex; flex-direction: column; align-items: flex-start; }
+.contact-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.contact-links a, .contact-copy {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+  color: #bbb; text-decoration: none; background: none;
+  border: 1px solid #3f3f3f; padding: 15px 22px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.contact-links a:hover, .contact-copy:hover { color: #fff; border-color: #fff; background: var(--hover-bg); }
+.contact-links a b, .contact-copy b { color: #fff; font-weight: 400; }
+.contact-note { font-size: 11.5px; color: #8a8a8a; margin-top: 18px; max-width: 560px; }
+
+footer {
   border-top: 1px solid var(--border);
-  padding-top: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.hire-cta-text {
-  font-size: 13px;
-  line-height: 1.9;
-  color: #999;
-  margin-bottom: 24px;
-  max-width: 480px;
-}
-
-@media (max-width: 760px) {
-  .hire-tiers { grid-template-columns: 1fr; }
-}
-
-/* ── SCROLLBAR ──────────────────────────── */
-#main::-webkit-scrollbar { width: 4px; }
-#main::-webkit-scrollbar-track { background: #000; }
-#main::-webkit-scrollbar-thumb { background: #222; }
-#main::-webkit-scrollbar-thumb:hover { background: #333; }
-
-/* ── RESPONSIVE ─────────────────────────── */
-@media (max-width: 600px) {
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .stat:nth-child(2) { border-right: none; }
+  padding: 26px var(--pad-x) 40px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #6a6a6a;
+  display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between;
 }
 </style>
 </head>
-<body>
+<body class="lower">
+<canvas id="glCanvas" aria-hidden="true"></canvas>
+<div id="gridBg" aria-hidden="true"></div>
 
-<canvas id="glCanvas"></canvas>
-<div id="gridBg"></div>
-
-<div id="crtFlash"></div>
-
-<!-- TERMINAL -->
-<div id="terminal">
-  <div id="termOutput"></div>
-  <span id="termCursor"></span>
-  <div class="crt-scan" id="crtScan"></div>
+<!-- BOOT: short, skippable, non-blocking -->
+<div id="boot">
+  <button class="boot-skip" onclick="endBoot()">SKIP</button>
+  <div id="bootOut"></div>
 </div>
 
-<audio id="crtSfx" preload="auto" src="sfx/crt-boot.mp3"></audio>
+<nav>
+  <div class="nav-logo">LIMI</div>
+  <div class="nav-links" id="navLinks">
+    <a href="#work">WORK</a>
+    <a href="#mirage">MIRAGE</a>
+    <a href="#rates">RATES</a>
+    <a href="#process">PROCESS</a>
+    <a href="#faq">FAQ</a>
+    <a href="#contact">CONTACT</a>
+  </div>
+  <a class="nav-hire" href="#rates">HIRE ME</a>
+  <button class="nav-btn" id="visBtn" onclick="cycleVisuals()" title="Background visuals">VISUALS: LITE</button>
+  <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks" onclick="toggleNav()">MENU</button>
+</nav>
 
-<!-- WARNING 1 - SHADER PERFORMANCE -->
-<div class="overlay" id="warn1">
-  <div class="warn-box">
-    <div class="warn-header">WARNING - PERFORMANCE</div>
-    <div class="warn-body">
-      <strong>this site runs heavy WebGL shaders.</strong>
-      these may cause slowdowns on low end hardware.<br>
-      decrease shader quality?
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">// ROBLOX PROGRAMMER · NETWORKING &amp; SIMULATION</div>
+  <h1 class="prose">Combat that feels the same at 150 ping as it does at 0.</h1>
+  <p class="hero-bio prose">
+    I build server-authoritative systems for Roblox from scratch: combat with prediction and
+    reconciliation, lag compensation, anticheat that doesn't trust the client, and simulations
+    big enough to break a normal server. Most of my work is systems that don't exist yet. When
+    something you already have is slow, desyncing or exploitable, I fix that too.
+  </p>
+  <div class="hero-ctas">
+    <a class="btn-solid" href="#rates">GET AN ESTIMATE &rarr;</a>
+    <a class="btn-ghost" href="#work">SEE THE WORK</a>
+  </div>
+
+  <div class="proof">
+    <div class="proof-item">
+      <div class="proof-n">~0 ms</div>
+      <div class="proof-l">added parry delay at 150&nbsp;ping, server-authoritative</div>
     </div>
-    <div class="warn-footer">
-      <button class="btn" onclick="handleW1(true)">YES</button>
-      <button class="btn" onclick="handleW1(false)">NO</button>
+    <div class="proof-item">
+      <div class="proof-n">500+</div>
+      <div class="proof-l">units per battle at 60+ FPS, resolved headless on the server</div>
+    </div>
+    <div class="proof-item">
+      <div class="proof-n">100%</div>
+      <div class="proof-l">server-side logic; the client only renders</div>
+    </div>
+    <div class="proof-item">
+      <div class="proof-n">&lt;24 h</div>
+      <div class="proof-l">typical reply on Discord, GMT+3</div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- WARNING 2 - EPILEPSY -->
-<div class="overlay" id="warn2">
-  <div class="warn-box">
-    <div class="warn-header">WARNING - EPILEPSY</div>
-    <div class="warn-body">
-      <strong>flashing / animated visuals ahead.</strong>
-      this site contains animated background effects. if you are photosensitive or prone to seizures, these can be disabled entirely.<br><br>
-      disable background animations?
-    </div>
-    <div class="warn-footer">
-      <button class="btn" onclick="handleW2(true)">YES</button>
-      <button class="btn" onclick="handleW2(false)">NO</button>
+<!-- CASE STUDIES -->
+<section class="band" id="work">
+  <div class="band-head">
+    <div class="eyebrow">// CASE STUDIES</div>
+    <h2 class="prose">Three systems, and how they were built</h2>
+    <p class="band-sub prose">Each of these is a networking or simulation problem that most Roblox projects either give up on or ship broken. Each one comes with the comparison against the way it's usually done.</p>
+  </div>
+
+  <div class="quote creed">
+    <span class="quote-mark">"</span>
+    <div>
+      <p>Good code isn't just code that works. It's code that's modular, exploit-proof and fast. That's the part you're actually paying for.</p>
+      <cite>// HOW I BUILD</cite>
     </div>
   </div>
-</div>
 
-<!-- MAIN SITE -->
-<div id="main">
-  <nav>
-    <div class="nav-logo">LIMI</div>
-    <div class="nav-tabs">
-      <div class="nav-tab active" onclick="showTab('home', this)">HOME</div>
-      <div class="nav-tab" onclick="showTab('projects', this)">PROJECTS</div>
-      <div class="nav-tab" onclick="showTab('videos', this)">VIDEOS</div>
-      <div class="nav-tab" onclick="showTab('packages', this)">PACKAGES</div>
-      <div class="nav-tab" id="tab-hire" onclick="showTab('hire', this)">HIRE ME</div>
-    </div>
-  </nav>
-
-  <!-- HOME -->
-  <section id="s-home" class="active">
-    <div class="hero">
-      <div class="hero-eyebrow">// ROBLOX DEVELOPER</div>
-      <div class="hero-name">limi</div>
-      <p class="hero-bio">
-        hello! thank you for checking out my portfolio. im limi, a 16 year old programmer with 3 years of experience. my work focuses on networking, physics, and backend logic, and on syncing backend systems efficiently. you can check out my projects and videos in the tabs above, or head to the hire me tab if you're looking to commission work.
-      </p>
-      <div class="hero-ctas">
-        <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
-        <div class="hero-hire-btn" onclick="goToHire()">HIRE ME &rarr;</div>
-      </div>
-      <div class="stats">
-        <div class="stat"><div class="stat-n">3</div><div class="stat-l">YRS EXP</div></div>
-        <div class="stat"><div class="stat-n">16</div><div class="stat-l">YRS OLD</div></div>
-        <div class="stat"><div class="stat-n">LUAU</div><div class="stat-l">PRIMARY LANG</div></div>
-        <div class="stat"><div class="stat-n">OPEN</div><div class="stat-l">COMMISSIONS</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PROJECTS -->
-  <section id="s-projects">
-    <div class="page-head">
-      <div class="page-tag">// WORK</div>
-      <div class="page-title">Projects</div>
-    </div>
-    <div class="projects-grid">
-
-      <div class="project-card">
-        <div class="proj-role">SOLO</div>
-        <div class="proj-name">Vampire Survivors Gun Test</div>
-        <div class="proj-date">less than a day of work</div>
-        <p class="proj-desc">
-          simple vamp survivors gun test.
-        </p>
-        <a class="proj-link" href="https://www.roblox.com/games/119725468708582" target="_blank" rel="noopener">VIEW ON ROBLOX →</a>
-      </div>
-
-      <div class="project-card">
-        <div class="proj-role">SOLO</div>
-        <div class="proj-name">Electromagnetism sim</div>
-        <div class="proj-date">20 hours or so of work.</div>
-        <p class="proj-desc">
-          realistic electromagnetism sim on roblox.
-        </p>
-        <a class="proj-link" href="https://www.roblox.com/games/132602129249818/electromagnetism-sim" target="_blank" rel="noopener">VIEW ON ROBLOX →</a>
-      </div>
-
-      <div class="project-card">
-        <div class="proj-role">SOLO</div>
-        <div class="proj-name">Roblox Circuitry</div>
-        <div class="proj-date">about 100 hours of work</div>
-        <p class="proj-desc">
-          low level hardware (logic gates) sim on roblox with a functional 8 bit SAP-2 computer that can run assembly code (and bad apple!).
-        </p>
-        <a class="proj-link" href="https://www.roblox.com/games/118777172735689/Roblox-Circuitry" target="_blank" rel="noopener">VIEW ON ROBLOX →</a>
-      </div>
-      
-    </div>
-  </section>
-
-  <!-- VIDEOS -->
-  <section id="s-videos">
-    <div class="page-head">
-      <div class="page-tag">// SHOWCASE</div>
-      <div class="page-title">Videos</div>
-    </div>
-    <div class="videos-grid">
-
-      <div class="video-card">
-        <a class="video-thumb-link" href="https://youtu.be/udWz-9xB9K4" target="_blank" rel="noopener">
-          <img src="https://img.youtube.com/vi/udWz-9xB9K4/hqdefault.jpg" alt="Custom VFX System" loading="lazy">
-          <div class="video-play-btn">
-            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+  <!-- CASE 1 -->
+  <article class="case">
+    <div class="case-top">
+      <div class="case-media">
+        <a class="thumb" href="https://youtu.be/rqj9w6J4oxo" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/rqj9w6J4oxo/hqdefault.jpg" alt="Parry combat system demo" loading="lazy">
+          <div class="thumb-play">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
           </div>
-          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
+          <div class="thumb-tag">WATCH DEMO ↗</div>
         </a>
-        <div class="video-label">this is multiversal war rng. a rng game where you put entire armies against each other (or 1 juggernaut vs an army) that uses a complex, unexploitable (i mean unexploitable literally, as all the client does is rendering) backend system that can handle wars consisting of thousands of units with unique ais. about 300 hours of work.</div>
       </div>
-
-      <div class="video-card">
-        <div class="video-warn-bar">FLASHING LIGHTS - PHOTOSENSITIVITY WARNING</div>
-        <a class="video-thumb-link" href="https://www.youtube.com/watch?v=hZPPMVoav38" target="_blank" rel="noopener">
-          <img src="https://img.youtube.com/vi/hZPPMVoav38/hqdefault.jpg" alt="Custom VFX System" loading="lazy">
-          <div class="video-play-btn">
-            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
-          </div>
-          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
-        </a>
-        <div class="video-label">a weapon made to test a vfx pipeline system made for multiversal war rng.</div>
-      </div>
-
-      <div class="video-card">
-        <a class="video-thumb-link" href="https://youtu.be/rqj9w6J4oxo" target="_blank" rel="noopener">
-          <img src="https://img.youtube.com/vi/rqj9w6J4oxo/hqdefault.jpg" alt="Parry Combat System" loading="lazy">
-          <div class="video-play-btn">
-            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
-          </div>
-          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
-        </a>
-        <div class="video-label">this is a commissioned combat system for a game thats heavily based around parries. built a system so parries play out instantly no matter your ping, while still keeping solid anticheat. the client only shows what you did, then the server decides afterwards if it actually worked, by rewinding both players back to the moment they acted, which saves the massive round trip time. a parry at 150 ping gets judged exactly the same as one at 0, basically solving the ping issue parries normally have in games where parrying past 100 ping is usually outright impossible.</div>
-      </div>
-
-      <div class="video-card">
-        <a class="video-thumb-link" href="https://youtu.be/HXUWDUyEQg8" target="_blank" rel="noopener">
-          <img src="https://img.youtube.com/vi/HXUWDUyEQg8/hqdefault.jpg" alt="Grid Building System" loading="lazy">
-          <div class="video-play-btn">
-            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
-          </div>
-          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
-        </a>
-        <div class="video-label">simple grid building and surface ui test.</div>
-      </div>
-
-      <div class="video-card">
-        <a class="video-thumb-link" href="https://youtu.be/DpElifYPeLg" target="_blank" rel="noopener">
-          <img src="https://img.youtube.com/vi/DpElifYPeLg/hqdefault.jpg" alt="Command Based Ballistics System" loading="lazy">
-          <div class="video-play-btn">
-            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
-          </div>
-          <div class="video-yt-label">WATCH ON YOUTUBE ↗</div>
-        </a>
-        <div class="video-label">a command based ballistics system made as an interview project.</div>
-      </div>
-
-    </div>
-  </section>
-
-  <section id="s-packages">
-    <div class="page-head">
-      <div class="page-tag">// WALLY</div>
-      <div class="page-title">Packages</div>
-    </div>
-    <div class="pkg-viewer">
-      <button class="pkg-arrow pkg-arrow-left" onclick="pkgNav(-1)" aria-label="Previous package">&larr;</button>
-      <div class="pkg-stage" id="pkgStage">
-
-        <article class="pkg-panel">
-          <div class="pkg-header">
-            <div class="pkg-index"></div>
-            <div class="pkg-name">Mirage</div>
-            <div class="pkg-install">wally = <span>"aslyumm/mirage@0.1.0"</span></div>
-          </div>
-          <div class="pkg-grid">
-            <a class="video-thumb-link" href="https://youtu.be/KPk9QT_cwOw" target="_blank" rel="noopener">
-              <img src="https://img.youtube.com/vi/KPk9QT_cwOw/hqdefault.jpg" alt="Mirage demo" loading="lazy">
-              <div class="video-play-btn">
-                <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
-              </div>
-              <div class="video-yt-label">WATCH DEMO &uarr;</div>
-            </a>
-            <div class="pkg-info">
-              <div class="pkg-section-label">EXPLANATION</div>
-              <p class="pkg-explanation">a small wally package that adds client-side prediction &amp; reconciliation for whatever custom state you stream from the server.</p>
-              <div class="pkg-links">
-                <a class="pkg-link" href="https://aslyumm.github.io/Mirage/" target="_blank" rel="noopener">DOCUMENTATION &uarr;</a>
-                <a class="pkg-link" href="https://devforum.roblox.com/t/release-a-free-solution-to-ping-for-server-authoritative-data-introducing-mirage/4757963" target="_blank" rel="noopener">DEVFORUM POST &uarr;</a>
-                <a class="pkg-link" href="https://github.com/aslyumm/Mirage" target="_blank" rel="noopener">GITHUB &uarr;</a>
-              </div>
-            </div>
-          </div>
-        </article>
-
-      </div>
-      <button class="pkg-arrow pkg-arrow-right" onclick="pkgNav(1)" aria-label="Next package">&rarr;</button>
-    </div>
-    <div class="pkg-dots" id="pkgDots"></div>
-  </section>
-
-  <!-- HIRE ME -->
-  <section id="s-hire">
-    <div class="page-head">
-      <div class="page-tag">// CONTRACT WORK</div>
-      <div class="page-title">Hire Me</div>
-    </div>
-
-    <div class="hire-wrap">
-
-      <div class="hire-block">
-        <div class="hire-label">AVAILABILITY</div>
-        <ul class="hire-list">
-          <li>based in turkey. mostly free throughout the day unless already working on other commissions.</li>
-          <li>currently in a long term position, but that doesnt rule out taking on multiple long term positions at once, it really just comes down to the details. ive got a lot of free time on my hands right now and could use the extra income, so having more than one long term position at the same time isnt off the table.</li>
-          <li>how many hours a day are dedicated to a commission is discussed and agreed on in detail beforehand.</li>
-          <li>work is done as fast as reasonably possible, and any time im not free is communicated in advance along with why.</li>
-        </ul>
-      </div>
-
-      <div class="hire-block">
-        <div class="hire-label">AI USAGE</div>
-        <ul class="hire-list">
-          <li>in solo projects, ai is only ever used to help put together ui. everything else (systems, logic, networking, all of it) is still made entirely by me.</li>
-          <li>if youd rather ai not be touched anywhere in the project at all, just provide the ui assets yourself and it wont be used.</li>
-          <li>if ui assets arent provided, keep in mind im not a ui artist: the ui i put together on my own wont look great, or ill end up using ai for it instead.</li>
-        </ul>
-      </div>
-
-      <div class="hire-block">
-        <div class="hire-label">RATES</div>
-        <div class="hire-tiers">
-          <div class="hire-tier">
-            <div class="hire-tier-name">small</div>
-            <div class="hire-tier-price">~2,000 robux</div>
-            <div class="hire-tier-desc">about 30 min &ndash; 1 hr of work. eg. a single ability integrated into an already built system, small bug fixes, etc.</div>
-          </div>
-          <div class="hire-tier">
-            <div class="hire-tier-name">medium</div>
-            <div class="hire-tier-price">~15,000 robux</div>
-            <div class="hire-tier-desc">a system upgrade. eg. an abilities system added into an already built combat system.</div>
-          </div>
-          <div class="hire-tier">
-            <div class="hire-tier-name">large</div>
-            <div class="hire-tier-price">50,000+ robux</div>
-            <div class="hire-tier-desc">major network optimizations, a full system built from scratch, or anything that takes days to a week or more. work in this range priced below 50k will be turned down.</div>
-          </div>
+      <div class="case-intro">
+        <div class="case-kicker">COMMISSIONED · SHIPPED</div>
+        <h3 class="prose">Parry-based combat that survives ping</h3>
+        <p class="case-line prose">A full melee kit (parry, block, posture, perfect dodge, hotbar abilities, aerials) built around parry timing, the one mechanic that breaks hardest when players aren't on fibre.</p>
+        <div class="case-tags">
+          <span class="case-tag">LAG COMPENSATION</span>
+          <span class="case-tag">SERVER REWIND</span>
+          <span class="case-tag">ANTICHEAT</span>
         </div>
-        <ul class="hire-list">
-          <li>pricing isnt calculated strictly per hour. milestone based pricing is also accepted.</li>
-          <li>an accurate quote needs clear communication up front about budget and what the work involves.</li>
-          <li>open to negotiating if a price feels unfair to you or doesnt fit your budget.</li>
-        </ul>
       </div>
-
-      <div class="hire-block">
-        <div class="hire-label">PAYMENT</div>
-        <ul class="hire-list">
-          <li>both money and robux are accepted, but robux is currently preferred. sending money into turkey tends to be messier and usually means both sides sharing more personal information than most people are comfortable with, so an app would need to be agreed on first.</li>
-          <li>robux payments are calculated at the devex rate, not the purchased robux rate.</li>
-          <li>percentage based deals are not accepted.</li>
-          <li>group funds arent used, to avoid scams, unless a trust payment is made first.</li>
-          <li>a trust payment usually covers about a quarter to half of the total price, depending on the size of the project and the taxes involved, and is negotiable. in most cases it lands around half.</li>
-          <li>work pauses once that portion of the project is done, until the trust payment is sent. the rest can then be sent later through group funds.</li>
-        </ul>
-      </div>
-
-      <div class="hire-cta">
-        <div class="hire-label">CONTACT</div>
-        <p class="hire-cta-text">reach out on discord to talk through a project, timeline, and budget.</p>
-        <div class="hero-discord">DISCORD &nbsp;<span>alcperchance</span></div>
-      </div>
-
     </div>
-  </section>
+    <div class="case-grid">
+      <div class="case-cell">
+        <h4>THE PROBLEM</h4>
+        <p class="prose">In most Roblox games, parrying above 100 ping is effectively impossible. The input has to travel to the server and back before anything resolves, so a correct read still registers as a miss. Studios usually "fix" this by letting the client decide, which hands exploiters the whole combat system.</p>
+      </div>
+      <div class="case-cell">
+        <h4>THE APPROACH</h4>
+        <p class="prose">The client plays the parry instantly, but only as a prediction; it never decides the outcome. The server stores a short history of both players' states, then rewinds them to the exact tick each input was made and judges the exchange there. Mispredictions reconcile back silently.</p>
+      </div>
+      <div class="case-cell result">
+        <h4>THE RESULT</h4>
+        <p class="prose">A parry at 150 ping is judged identically to one at 0, with no round-trip delay for the player. The server stays fully authoritative, so nothing on the client is worth exploiting.</p>
+      </div>
+    </div>
 
-</div>
+    <div class="case-mech">
+      <h4>WHAT SHIPPED WITH IT</h4>
+      <div class="mech-list prose">
+        <div><b>Parry.</b> Negates the attack's damage entirely and puts the damage into the attacker's posture instead.</div>
+        <div><b>Block.</b> Takes chip damage through the guard and feeds the posture-break bar.</div>
+        <div><b>Perfect dodge.</b> Available against most attacks, with iframes on the opening frames of the dodge only.</div>
+        <div><b>Limited true stun.</b> You can still parry or block mid-string, so light attacks never become a free combo.</div>
+        <div><b>Hotbar.</b> Up to nine items, abilities or weapons, usable whenever the player wants, RPG-style rather than fixed slots.</div>
+        <div><b>Aerials.</b> Air variants of both light and heavy attacks, taken from the same input in the air.</div>
+      </div>
+    </div>
+
+    <!-- EVIDENCE 1: interactive ping demo -->
+    <div class="evidence">
+      <div class="ev-head">
+        <span class="ev-label">// TRY IT</span>
+        <span class="ev-title prose">Same input, two architectures</span>
+      </div>
+      <p class="ev-sub prose">Set a ping, then hit parry as the attack crosses the window. The naive lane sends your input to the server and judges it on arrival. The rewind lane judges it at the tick you actually pressed. Both are server-authoritative in the second case; the difference is when the server thinks you pressed.</p>
+
+      <div class="ctrl-row">
+        <div class="ctrl">
+          <span class="ctrl-k">PING</span>
+          <input type="range" id="pingRange" min="0" max="300" step="10" value="150" aria-label="Round-trip ping in milliseconds">
+          <span class="ctrl-v" id="pingVal">150 ms</span>
+        </div>
+        <button class="btn-mini primary" id="pingStart" type="button">RUN ATTACK · PERFECT READ</button>
+        <button class="btn-mini" id="pingParry" type="button" disabled>PARRY IT YOURSELF</button>
+      </div>
+
+      <div class="lanes">
+        <div class="lane">
+          <div class="lane-head">
+            <span class="lane-name">CLIENT SENDS → SERVER JUDGES ON ARRIVAL</span>
+            <span class="lane-verdict" id="vNaive">READY</span>
+          </div>
+          <div class="track" id="trackNaive">
+            <div class="track-window" id="winNaive"></div>
+            <div class="track-input" id="inNaive" data-tag="JUDGED HERE"></div>
+            <div class="track-attack" id="atkNaive"></div>
+          </div>
+          <p class="lane-note prose">Your press is judged half a round trip late, so the attack has already moved past the window.</p>
+        </div>
+
+        <div class="lane good">
+          <div class="lane-head">
+            <span class="lane-name">CLIENT PREDICTS → SERVER REWINDS AND JUDGES</span>
+            <span class="lane-verdict" id="vRewind">READY</span>
+          </div>
+          <div class="track" id="trackRewind">
+            <div class="track-window" id="winRewind"></div>
+            <div class="track-input" id="inRewind" data-tag="JUDGED HERE"></div>
+            <div class="track-attack" id="atkRewind"></div>
+          </div>
+          <p class="lane-note prose">The server keeps a short state history, rewinds to the tick you pressed, and judges the exchange there.</p>
+        </div>
+      </div>
+
+      <div class="readout">
+        <div>PRESSED AT <b id="roPress">-</b></div>
+        <div>NAIVE JUDGED AT <b id="roNaive">-</b></div>
+        <div>REWIND JUDGED AT <b id="roRewind">-</b></div>
+        <div>TIMING ERROR IMPOSED BY PING <b id="roErr">-</b></div>
+      </div>
+      <p class="lane-note prose" id="pingNote">Run it and the player reads the attack perfectly: the input lands dead centre. Everything after that is ping. Against a 120&nbsp;ms window, the naive lane stops being able to parry above about 120&nbsp;ping; the rewind lane never does. Drag the slider down to 40 and watch the difference disappear. That's the honest version of this claim.</p>
+
+      <details class="assumptions">
+        <summary>WHAT THIS DEMO DOES AND DOESN'T SHOW</summary>
+        <div class="a-body">
+          <p>The parry window here is 120&nbsp;ms wide, which is roughly a tight-but-fair window in a melee game. Ping is treated as symmetric, so the client-to-server trip is half the number on the slider. Nothing else is simulated: no jitter, no packet loss, no tick quantisation. All three make the naive lane worse, not better.</p>
+          <p>What it demonstrates is one thing only: with a fixed window, the naive lane's judgement point drifts by <code>ping / 2</code> while the rewind lane's does not. That is the whole argument, and it is the same argument the shipped system makes.</p>
+        </div>
+      </details>
+    </div>
+
+  </article>
+
+  <!-- CASE 2 -->
+  <article class="case">
+    <div class="case-top">
+      <div class="case-media">
+        <a class="thumb" href="https://youtu.be/udWz-9xB9K4" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/udWz-9xB9K4/hqdefault.jpg" alt="Multiversal War RNG battle demo" loading="lazy">
+          <div class="thumb-play">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+          </div>
+          <div class="thumb-tag">WATCH DEMO ↗</div>
+        </a>
+      </div>
+      <div class="case-intro">
+        <div class="case-kicker">SOLO · ~300 HOURS</div>
+        <h3 class="prose">Headless battle engine for an auto-battler</h3>
+        <p class="case-line prose">Multiversal War RNG: entire battles resolved as pure deterministic computation on the server, then replayed on the client from an event log.</p>
+        <div class="case-tags">
+          <span class="case-tag">ECS</span>
+          <span class="case-tag">DETERMINISTIC SIM</span>
+          <span class="case-tag">EVENT-LOG REPLAY</span>
+        </div>
+      </div>
+    </div>
+    <div class="case-grid">
+      <div class="case-cell">
+        <h4>THE PROBLEM</h4>
+        <p class="prose">The obvious build spawns every unit as a physical character on the server, runs pathfinding on each one and replicates its state every frame. That dies in the low hundreds, and every unit it does spawn is another object sitting on the client for an exploiter to read or edit.</p>
+      </div>
+      <div class="case-cell">
+        <h4>THE APPROACH</h4>
+        <p class="prose">No models on the server at all. The battle is resolved as a deterministic computation on a 2D plane: state lives in small ECS components per unit, and a set of systems ticks through them until a side wins. The server emits a structured event log (spawns, movement, attacks, deaths) and the client replays it, spawning models, interpolating movement and firing effects. AI comes from templates keyed on unit type and rarity, with combat built on reaction time against wind-up time: telegraphed heavies, dodges, parries, feints and counters.</p>
+      </div>
+      <div class="case-cell result">
+        <h4>THE RESULT</h4>
+        <p class="prose">500+ unit battles run at 60+ FPS in a live server. The client never holds authority; it's replaying a log the server already finished, so there is no game state worth editing. The engine emits signals independently of the UI, which is how rolling, upgrades and the economy hang off it without touching combat.</p>
+      </div>
+    </div>
+
+    <!-- EVIDENCE 2: where each approach stops working -->
+    <div class="evidence">
+      <div class="ev-head">
+        <span class="ev-label">// HOW MANY UNITS FIT</span>
+        <span class="ev-title prose">130 units the usual way. 6,300 with this system.</span>
+        <span class="honesty">MATH MODEL · NOT A LIVE BENCHMARK</span>
+      </div>
+      <p class="ev-sub prose">Same server, same 60 frames a second. The usual approach gives every soldier its own model, its own pathfinding and its own replicated state, and runs out of frame at about 130 of them. Headless ECS state runs out at about 6,300.</p>
+
+      <div class="bigstat">
+        <div class="bigstat-n">48&times;</div>
+        <div class="bigstat-l">more units per server before the frame budget runs out: <b>130</b> the usual way, <b>6,300</b> here. The shipped game runs 500+ unit battles at 60+ FPS; the numbers below are calculated from per-unit costs.</div>
+      </div>
+
+      <div class="chart-wrap">
+        <svg id="chartUnits" viewBox="0 0 660 210" role="img" aria-label="Two horizontal bars showing how many units each approach can run inside one frame. The usual per-instance approach reaches about 130 units; the batched server-only approach reaches about 6,300 units, roughly 48 times more."></svg>
+      </div>
+      <div class="legend">
+        <span><i class="swatch dash"></i>PER-INSTANCE (THE USUAL WAY)</span>
+        <span><i class="swatch"></i>HEADLESS ECS + EVENT REPLAY (THIS SYSTEM)</span>
+      </div>
+
+      <div class="ctrl-row" style="margin-top:22px">
+        <div class="ctrl">
+          <span class="ctrl-k">ARMY SIZE</span>
+          <input type="range" id="unitRange" min="20" max="7000" step="10" value="500" aria-label="Number of simulated units">
+          <span class="ctrl-v" id="unitVal">500</span>
+        </div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict" id="naiveCard">
+          <div class="verdict-k">THE USUAL WAY</div>
+          <div class="verdict-v" id="naiveMs">-</div>
+        </div>
+        <div class="verdict" id="fastCard">
+          <div class="verdict-k">THIS SYSTEM</div>
+          <div class="verdict-v" id="fastMs">-</div>
+        </div>
+      </div>
+
+      <details class="assumptions">
+        <summary>HOW THESE NUMBERS ARE CALCULATED</summary>
+        <div class="a-body">
+          <p><b>Per-instance.</b> Each unit is a rigged model on the server with its own animator, humanoid-style movement, its own target search and its own replicated state, about <code>0.12 ms</code> of server step time each once movement, animation state and replication bookkeeping are counted, plus an <code>n²</code> term for target searching without a spatial partition. Against a <code>16.6 ms</code> frame that ceiling lands at ~130 units.</p>
+          <p><b>Headless ECS.</b> No instances on the server at all: flat component arrays stepped by a handful of systems, target search through a grid, and state sent to clients as an event log rather than n property updates per frame. About <code>0.0025 ms</code> per unit plus a fixed <code>0.8 ms</code> per tick that doesn't grow with the army, so ~6,300 units in the same frame.</p>
+          <p><b>Bandwidth, which the chart doesn't show.</b> A per-instance CFrame plus state costs 40–50 bytes per unit per replication tick, which passes a normal player's downstream budget somewhere between 50 and 100 units, usually before the CPU does. Delta-encoded batched state at 6–8 bytes per unit, with distant units aggregated, keeps thousands inside the same budget.</p>
+          <p><b>Where the numbers come from.</b> These are calculated from known per-unit costs rather than recorded from a live test place, which is what the model tag means. The ratio is the claim: one approach has a ceiling in the low hundreds, the other doesn't hit one at the scales this game runs at.</p>
+        </div>
+      </details>
+    </div>
+  </article>
+
+  <!-- CASE 3 -->
+  <article class="case">
+    <div class="case-top">
+      <div class="case-media">
+        <a class="thumb" href="https://www.roblox.com/games/118777172735689/Roblox-Circuitry" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/HXUWDUyEQg8/hqdefault.jpg" alt="Roblox Circuitry" loading="lazy">
+          <div class="thumb-play">
+            <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+          </div>
+          <div class="thumb-tag">PLAY ON ROBLOX ↗</div>
+        </a>
+      </div>
+      <div class="case-intro">
+        <div class="case-kicker">SOLO · ~100 HOURS</div>
+        <h3 class="prose">An 8-bit computer, inside Roblox</h3>
+        <p class="case-line prose">A logic-gate sandbox containing a working SAP-2 CPU that runs real assembly, and plays Bad Apple.</p>
+        <div class="case-tags">
+          <span class="case-tag">LOW-LEVEL LOGIC</span>
+          <span class="case-tag">PERFORMANCE</span>
+          <span class="case-tag">TOOLING</span>
+        </div>
+      </div>
+    </div>
+    <div class="case-grid">
+      <div class="case-cell">
+        <h4>THE PROBLEM</h4>
+        <p class="prose">Evaluating thousands of interconnected logic gates every tick is exactly the kind of workload that tanks a Roblox server if it's written the obvious way, with every gate polling its neighbours.</p>
+      </div>
+      <div class="case-cell">
+        <h4>THE APPROACH</h4>
+        <p class="prose">Gates are compiled into an event-driven graph so only the parts of the circuit that actually changed are re-evaluated, with propagation ordered to avoid redundant passes. On top of that sits a full SAP-2 instruction set and assembler.</p>
+      </div>
+      <div class="case-cell result">
+        <h4>THE RESULT</h4>
+        <p class="prose">Players build circuits complex enough to execute assembly programs and stream video, in real time, without the simulation becoming the bottleneck.</p>
+      </div>
+    </div>
+
+    <!-- EVIDENCE 3: what the cost scales with -->
+    <div class="evidence">
+      <div class="ev-head">
+        <span class="ev-label">// WHAT THE COST SCALES WITH</span>
+        <span class="ev-title prose">A running 8,000-gate CPU, once per tick</span>
+        <span class="honesty">MATH MODEL · NOT A LIVE BENCHMARK</span>
+      </div>
+      <p class="ev-sub prose">Polling costs the same whether the circuit is idle or busy, because every gate is visited every tick. Event-driven costs only what actually changed: on a running CPU, well under one percent of the board.</p>
+
+      <div class="bigstat">
+        <div class="bigstat-n">165&times;</div>
+        <div class="bigstat-l">cheaper per tick on the same circuit: <b>20 ms</b> polling everything, <b>0.12 ms</b> re-evaluating what changed. One of those fits in a frame. Calculated from per-gate cost.</div>
+      </div>
+
+      <div class="chart-wrap">
+        <svg id="chartGates" viewBox="0 0 660 200" role="img" aria-label="Two horizontal bars showing tick cost as a share of the 16.6 millisecond frame budget on an 8000 gate circuit. Polling every gate uses 120 percent of the frame and overruns it; re-evaluating only changed gates uses under 1 percent."></svg>
+      </div>
+      <div class="legend">
+        <span><i class="swatch dash"></i>POLL EVERY GATE, EVERY TICK · COST GROWS WITH BOARD SIZE</span>
+        <span><i class="swatch"></i>RE-EVALUATE WHAT CHANGED · COST GROWS WITH ACTIVITY</span>
+      </div>
+
+      <details class="assumptions">
+        <summary>HOW THESE NUMBERS ARE CALCULATED</summary>
+        <div class="a-body">
+          <p><b>Per-gate cost.</b> Roughly <code>0.0025 ms</code> to read a gate's inputs, evaluate it and write its output in Luau: a table lookup, a couple of comparisons and a store. Polling pays that for every gate on the board, 60 times a second, no matter what the circuit is doing: 15% of the frame at 1,000 gates, 60% at 4,000, past the whole frame at 8,000.</p>
+          <p><b>Changed fraction.</b> On a clocked SAP-2 running a program, the gates whose inputs actually change on a given tick are the ones on the active path: a bus write, a register latch, a handful of decode lines. That's the <code>~0.6%</code> figure used here. Idle circuits go to nearly zero; a deliberately pathological board with a clock wired into everything converges back toward the polling line, and that's the honest limit of the claim.</p>
+          <p><b>Frame budget.</b> 16.6&nbsp;ms per step at 60&nbsp;Hz, and the chart shows tick cost as a share of it. Polling's share is set by how big your circuit is; event-driven's share is set by how much of it is doing anything. These are calculated from per-gate cost rather than recorded from a live test place, which is what the model tag means.</p>
+        </div>
+      </details>
+    </div>
+  </article>
+</section>
+
+<!-- MIRAGE -->
+<section class="band" id="mirage">
+  <div class="band-head">
+    <div class="eyebrow">// OPEN SOURCE</div>
+    <h2 class="prose">Mirage</h2>
+    <p class="band-sub prose">The prediction layer from my commissioned work, packaged, documented and released free for anyone to use.</p>
+  </div>
+
+  <div class="pkg">
+    <div class="pkg-media">
+      <a class="thumb" href="https://youtu.be/KPk9QT_cwOw" target="_blank" rel="noopener">
+        <img src="https://img.youtube.com/vi/KPk9QT_cwOw/hqdefault.jpg" alt="Mirage demo" loading="lazy">
+        <div class="thumb-play">
+          <svg viewBox="0 0 68 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C56 0 34 0 34 0S12 0 7.5 1.7a8.5 8.5 0 0 0-6 6C0 12.1 0 24 0 24s0 11.9 1.5 16.3a8.5 8.5 0 0 0 6 6C12 48 34 48 34 48s22 0 26.5-1.7a8.5 8.5 0 0 0 6-6C68 35.9 68 24 68 24s0-11.9-1.5-16.3z" fill="#fff" fill-opacity="0.9"/><path d="M45 24 27 14v20z" fill="#111"/></svg>
+        </div>
+        <div class="thumb-tag">WATCH DEMO ↗</div>
+      </a>
+    </div>
+    <div class="pkg-body">
+      <div class="pkg-name">Mirage</div>
+      <div class="pkg-install">wally = <span>"aslyumm/mirage@0.1.0"</span></div>
+      <p class="prose">
+        Client-side prediction and reconciliation for any custom state you stream from the
+        server. Your game keeps a single source of truth on the server, and players stop
+        feeling their ping. Documented, published on Wally, and released on the DevForum.
+      </p>
+      <div class="pkg-links">
+        <a href="https://aslyumm.github.io/Mirage/" target="_blank" rel="noopener">DOCS ↗</a>
+        <a href="https://devforum.roblox.com/t/release-a-free-solution-to-ping-for-server-authoritative-data-introducing-mirage/4757963" target="_blank" rel="noopener">DEVFORUM RELEASE ↗</a>
+        <a href="https://github.com/aslyumm/Mirage" target="_blank" rel="noopener">GITHUB ↗</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OTHER WORK -->
+<section class="band">
+  <div class="band-head">
+    <div class="eyebrow">// ALSO BUILT</div>
+    <h2 class="prose">Other systems</h2>
+  </div>
+  <div class="work-grid">
+    <div class="work-card">
+      <h3 class="prose">Command-based ballistics</h3>
+      <p class="prose">Projectile system driven by a command layer, built as an interview project. Deterministic firing solutions with server validation.</p>
+      <a class="work-link" href="https://youtu.be/DpElifYPeLg" target="_blank" rel="noopener">WATCH ↗</a>
+    </div>
+    <div class="work-card">
+      <h3 class="prose">Grid building + surface UI</h3>
+      <p class="prose">Snap-based placement with live surface interfaces, built to test a placement pipeline for a base-building game.</p>
+      <a class="work-link" href="https://youtu.be/HXUWDUyEQg8" target="_blank" rel="noopener">WATCH ↗</a>
+    </div>
+    <div class="work-card">
+      <h3 class="prose">Electromagnetism simulation</h3>
+      <p class="prose">Field lines, charges and forces solved per-frame at real scale, running inside Roblox physics.</p>
+      <a class="work-link" href="https://www.roblox.com/games/132602129249818/electromagnetism-sim" target="_blank" rel="noopener">PLAY ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- DIAGNOSTIC ESTIMATOR -->
+<section class="band" id="rates">
+  <div class="band-head">
+    <div class="eyebrow">// COMMISSION PRICING</div>
+    <h2 class="prose">Pick the shape of the job. Get a scope.</h2>
+    <p class="band-sub prose">Start with what you want built: a system that doesn't exist yet, a whole backend, a fix, or a pentest. If something is already misbehaving, add the symptoms and the panel works out what's likely causing it, what I'd build, and roughly what that costs.</p>
+  </div>
+
+  <div class="est">
+    <div class="est-panel">
+      <div class="est-group">
+        <div class="est-label">// SHAPE OF THE JOB · START HERE</div>
+        <p class="est-hint">Most of this is building. Repairs and pentests live in the same list.</p>
+        <div id="shapes"></div>
+      </div>
+      <div class="est-group">
+        <div class="est-label">// ANYTHING MISBEHAVING? · OPTIONAL</div>
+        <p class="est-hint">Only if something already exists and isn't working. Things a player or playtester would notice.</p>
+        <div id="symptoms"></div>
+      </div>
+      <div class="est-group">
+        <div class="est-label">// OPTIONAL EXTRAS</div>
+        <p class="est-hint">Genuinely optional. Everything above already includes the engineering.</p>
+        <div id="extras"></div>
+      </div>
+    </div>
+
+    <aside class="est-out">
+      <div class="est-out-head">// DIAGNOSIS</div>
+      <div class="est-body" id="estBody">
+        <div class="est-empty">Pick a symptom and I'll tell you what's usually causing it.</div>
+      </div>
+      <div class="est-total">
+        <div class="est-off">NEXT 3 CLIENTS ONLY · 30% OFF</div>
+        <div class="est-total-row">
+          <span class="k">TOTAL USD</span>
+          <span><span class="est-was" id="estWas"></span> <span class="est-usd" id="estUsd">$0</span></span>
+        </div>
+        <div class="est-total-row">
+          <span class="k">IN ROBUX</span>
+          <span class="est-rbx" id="estRbx">R$0</span>
+        </div>
+        <div class="est-total-row">
+          <span class="k">ROUGH TIME</span>
+          <span class="est-time" id="estTime">-</span>
+        </div>
+        <p class="est-terms">50% up front, 50% on delivery, in milestones you can check. If half up front doesn't work for you, say so; the split is negotiable. Revisions to the agreed spec are included. Robux is converted at the DevEx rate, not the purchase rate.</p>
+        <a class="btn-solid" href="#contact">SEND THIS TO ME &rarr;</a>
+        <button class="btn-mini" type="button" id="copyBrief">COPY AS A BRIEF</button>
+      </div>
+    </aside>
+  </div>
+
+  <p class="est-foot prose">
+    These are starting points, not fixed quotes; the real number comes after I've looked at the
+    place file, and it can go down as easily as up. The 30% is for the next three commissions I
+    take, and it's already in the number above. If it still doesn't fit your budget, tell me the
+    budget and I'll tell you honestly what fits inside it.
+  </p>
+</section>
+
+<!-- PROCESS -->
+<section class="band" id="process">
+  <div class="band-head">
+    <div class="eyebrow">// HOW IT GOES</div>
+    <h2 class="prose">Working with me</h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">01 / SCOPE</div>
+      <h3 class="prose">We write it down</h3>
+      <p class="prose">What the system does, what it doesn't, and what "done" means. Nothing starts before this is agreed in text, so neither of us is guessing later.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">02 / SCHEDULE</div>
+      <h3 class="prose">Hours and deadline</h3>
+      <p class="prose">We agree how many hours a day go to your project. If I'm unavailable, you hear it in advance and you hear why.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">03 / BUILD</div>
+      <h3 class="prose">Visible progress</h3>
+      <p class="prose">Work lands in milestones with a video or a test place you can open each time. If a milestone isn't right, we fix it before the next one starts.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">04 / HANDOFF</div>
+      <h3 class="prose">Yours to maintain</h3>
+      <p class="prose">Commented, modular code plus a walkthrough of how it fits together, so your team can extend it without me.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="band" id="faq">
+  <div class="band-head">
+    <div class="eyebrow">// BEFORE YOU ASK</div>
+    <h2 class="prose">Common questions</h2>
+  </div>
+
+  <div class="faq">
+    <details>
+      <summary>How does payment work, and what protects me?</summary>
+      <div class="faq-body">
+        <p>Half up front, half on delivery, so neither side is carrying the whole risk. What protects you specifically: the scope is written down before anything starts, work arrives in milestones with a test place you can open, and if the first milestone isn't what we agreed you can stop there: you've spent half, and you keep what was delivered. On larger jobs I'll split it into more milestones so the amount exposed at any one moment is smaller.</p>
+        <p>Robux and currency are both fine. Robux is usually simpler for both of us: a bank transfer into Turkey means both sides handing ID and account details to a processor and to each other, and for a first commission neither of us needs to be holding the other's documents. If you'd rather pay in currency, say so and we agree the method before anything starts.</p>
+        <p>Robux is always converted at the DevEx rate (the rate I actually receive), not the purchase rate.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Can you take payment from group funds?</summary>
+      <div class="faq-body">
+        <p>Yes, for the second half. Group payouts can be pulled back by the group owner after the work is delivered, which is the one route where I'd be carrying all of the risk, so the up-front half comes through a route that can't be reversed. Everything after the first delivered milestone can come through the group.</p>
+        <p>If you'd rather not send anything directly to someone you haven't worked with, the fairer version is a small first milestone: a few hours of work, paid and delivered, so you see how I work before committing to the rest. I'd rather do that than have you take a leap.</p>
+      </div>
+    </details>
+    <details>
+      <summary>What if the result isn't what I wanted?</summary>
+      <div class="faq-body">
+        <p>Revisions against the agreed spec are included: if it doesn't do what we wrote down, it isn't finished, and I'm not asking for the second half. If you want something outside the spec, that's a new small scope and I'll price it before touching it rather than after.</p>
+        <p>If we get to the first milestone and you'd rather not continue, that's a clean stop. You keep the code from that milestone and owe nothing further.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Do you do revenue share?</summary>
+      <div class="faq-body">
+        <p>No, paid work only. I'm happy to price in milestones so a larger project can be paid down in stages instead of all at once.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Do you use AI?</summary>
+      <div class="faq-body">
+        <p>Never for systems, logic, networking or anything I'm hired to engineer. That's the work, and it's written by hand. I don't do UI design and don't count it as a skill of mine, so if a project needs interfaces, bring your own designer or assets and I'll wire them to the systems.</p>
+      </div>
+    </details>
+    <details>
+      <summary>What's your availability?</summary>
+      <div class="faq-body">
+        <p>Based in Turkey, GMT+3, generally free through the day. I'm in a long-term position at the moment but I do take on additional work; whether that fits depends on the hours involved, which we agree on before anything starts.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Who owns the code?</summary>
+      <div class="faq-body">
+        <p>You do, once it's paid for. Reusable pieces that aren't specific to your game may end up generalised into an open-source package later (Mirage started that way), but your systems, assets and design stay yours.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="band" id="contact">
+  <div class="band-head">
+    <div class="eyebrow">// LET'S BUILD</div>
+    <h2 class="prose">Tell me what you want built</h2>
+    <p class="band-sub prose">Send the game, what you want it to do, and a budget range. You'll usually hear back the same day.</p>
+  </div>
+  <div class="contact-wrap">
+    <div class="contact-links">
+      <button class="contact-copy" type="button" id="dcCopy" data-handle="alcperchance">DISCORD · <b>alcperchance</b> &nbsp;· COPY</button>
+      <a href="https://devforum.roblox.com/u/aslyumm" target="_blank" rel="noopener">DEVFORUM ↗</a>
+      <a href="https://github.com/aslyumm" target="_blank" rel="noopener">GITHUB ↗</a>
+    </div>
+    <p class="contact-note prose">Add me on Discord with the handle above, or message me on the DevForum if you'd rather keep it in one place. If you used the estimator, paste the brief it gave you; that's usually enough for me to reply with a real number.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>LIMI · ROBLOX PROGRAMMER</span>
+  <span>NETWORKING · SIMULATION · ANTICHEAT</span>
+</footer>
 
 <script>
-let quality = 'high';
+/* ═══════════ DIAGNOSTIC ESTIMATOR ═══════════ */
+const DEVEX = 0.0035; // USD per Robux
 
-const term = document.getElementById('terminal');
-const crtFlash = document.getElementById('crtFlash');
-const crtScan = document.getElementById('crtScan');
-const crtSfx = document.getElementById('crtSfx');
+const MODULES = {
+  scratch:  { name: 'The system itself, built from scratch',   price: 150 },
+  graft:    { name: 'Fitting it into your existing codebase',  price: 125 },
+  arch:     { name: 'Full server-authoritative backend',       price: 600 },
+  simcore:  { name: 'Headless simulation core',                price: 225 },
+  predict:  { name: 'Prediction + server rewind layer',        price: 175 },
+  netpass:  { name: 'Replication + bandwidth rework',          price: 150 },
+  authority:{ name: 'Authority moved back to the server',      price: 250 },
+  anticheat:{ name: 'Anticheat hardening + audit',             price: 100 },
+  profile:  { name: 'Profiling pass to find the actual cause', price: 75 },
+  patch:    { name: 'Targeted fix, scoped to one behaviour',   price: 50 },
+  pentest:  { name: 'Pentest pass: I attack it as an exploiter would', price: 125 },
+  report:   { name: 'Written findings, ranked by severity',    price: 50 },
+  docs:     { name: 'Written docs + handoff call',             price: 50 }
+};
 
-function playCrtSfx() {
-  if (!crtSfx) return;
-  crtSfx.currentTime = 0;
-  const p = crtSfx.play();
-  if (p && p.catch) p.catch(() => { /* blocked until user interacts, ignore */ });
-}
+/* Launch rate, applied to every estimate while it lasts. */
+const DISCOUNT = 0.30;
 
-// fast CRT power-on burst, plays once on first load
-term.classList.add('crt-boot');
-crtFlash.classList.add('play');
-playCrtSfx();
-
-const out = document.getElementById('termOutput');
-
-function line(text, cls = '') {
-  const el = document.createElement('div');
-  el.className = 'term-line ' + cls;
-  el.textContent = text || '\u00A0';
-  out.appendChild(el);
-}
-
-const phase1 = [
-  [0,   '',                                 'term-dim'],
-  [20,  'LIMI/OS  boot  v0.3.1',        'term-ok'],
-  [35,  '─────────────────────────────────────────────────', 'term-dim'],
-  [70,  '',                                 ''],
-  [130, 'mem check ............................... OK',    'term-ok'],
-  [190, 'cpu  Luau v5.1 .......................... OK',    'term-ok'],
-  [250, 'gpu  WebGL 2.0 context .................. OK',    'term-ok'],
-  [310, '',                                 ''],
-  [360, 'mount  /portfolio/projects ............. 3 items','term-ok'],
-  [400, 'mount  /portfolio/videos ............... 5 items','term-ok'],
-  [430, 'mount  /portfolio/packages ............. 1 item', 'term-ok'],
-  [460, 'mount  /portfolio/shaders .............. ready', 'term-ok'],
-  [510, '',                                 ''],
-  [570, '> checking display settings ...',               'term-cmd'],
+const SYMPTOMS = [
+  { id:'late', name:'Hits, parries or abilities land late for players on high ping',
+    cause:'The input is waiting on a full round trip before anything resolves, so correct timing reads as a miss.',
+    mods:['predict'] },
+  { id:'desync', name:'Players disagree about what happened: rubber-banding, positions that drift',
+    cause:'State is replicated per instance and arriving late or out of order, with nothing reconciling the client back.',
+    mods:['netpass','predict'] },
+  { id:'exploit', name:'Exploiters can do things they should not be able to',
+    cause:'Decisions the client should not be making are being made there, which leaves game state worth editing.',
+    mods:['authority','anticheat'] },
+  { id:'load', name:'The server chokes when a lot is happening at once',
+    cause:'Per-actor cost is growing faster than the tick budget, usually per-instance work that should be batched.',
+    mods:['profile','simcore','netpass'] },
+  { id:'scale', name:'I need far more units, projectiles or entities than the engine likes',
+    cause:'The default per-instance approach has a ceiling in the low hundreds; past that it needs a different data layout.',
+    mods:['simcore','netpass'] },
+  { id:'unsure', name:"Something is wrong and I don't know what",
+    cause:'Worth profiling before anything is rewritten; the visible symptom and the real cause are often in different systems.',
+    mods:['profile'] }
 ];
 
-const phase2 = [
-  [0,   '> display settings confirmed.',                  'term-cmd'],
-  [30,  '',                                 ''],
-  [70,  'load  shader pipeline ................... OK',   'term-ok'],
-  [110, 'load  navigation ....................... OK',    'term-ok'],
-  [150, 'load  project db ....................... OK',    'term-ok'],
-  [190, 'load  video renderer ................... OK',   'term-ok'],
-  [230, '',                                 ''],
-  [270, 'boot complete.',                                 'term-ok'],
-  [310, '',                                 ''],
-  [350, '> launching interface ...',                      'term-cmd'],
+const SHAPES = [
+  { id:'sscratch', name:'A system that does not exist yet',
+    note:'Built from zero against a spec we write together: combat, simulation, networking, tooling.',
+    mods:['scratch'] },
+  { id:'sgraft',   name:'Something new inside a codebase that must not break',
+    note:'The same build, plus the work of fitting it to what you already have without breaking it.',
+    mods:['scratch','graft'] },
+  { id:'sarch',    name:'A whole backend, designed from zero',
+    note:'Architecture, systems and the rules everything else follows.',
+    mods:['arch'] },
+  { id:'sscale',   name:'An existing system rebuilt to hold far more',
+    note:'Same feature set, an order of magnitude more units, projectiles or players inside it.',
+    mods:['profile','simcore'] },
+  { id:'spentest', name:'Pentesting: I attack it as an exploiter would',
+    note:'I go at your live game with the tools they use, then hand you what got through and how to close it.',
+    mods:['pentest','report'] },
+  { id:'sfix',     name:'A bug fix in a system that already exists',
+    note:'One specific behaviour, scoped tightly, without a rewrite attached.',
+    mods:['patch'] }
 ];
 
-phase1.forEach(([delay, text, cls]) => {
-  if (delay === 570 && text.includes('display')) {
-    setTimeout(() => {
-      line(text, cls);
-      setTimeout(() => showWarn('warn1'), 150);
-    }, delay);
-  } else {
-    setTimeout(() => line(text, cls), delay);
+const EXTRAS = [
+  { id:'docs', name:'Documentation + handoff call', note:'Written docs plus a walkthrough for your team.', mods:['docs'] }
+];
+
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const rbx = n => 'R$' + Math.round(n / DEVEX).toLocaleString('en-US');
+
+function optHTML(kind, o, right) {
+  const type = (kind === 'shape') ? 'radio' : 'checkbox';
+  return `<label class="opt">
+    <input type="${type}" name="${kind}" value="${o.id}" onchange="recalc()">
+    <span class="opt-mark"></span>
+    <span class="opt-text">
+      <span class="opt-name">${o.name}</span>
+      ${o.note ? `<span class="opt-note">${o.note}</span>` : ''}
+    </span>
+    ${right ? `<span class="opt-note" style="white-space:nowrap;margin-top:0">${right}</span>` : ''}
+  </label>`;
+}
+
+document.getElementById('shapes').innerHTML   = SHAPES.map(o => optHTML('shape', o)).join('');
+document.getElementById('symptoms').innerHTML = SYMPTOMS.map(o => optHTML('symptom', o)).join('');
+document.getElementById('extras').innerHTML   = EXTRAS.map(o => optHTML('extra', o, '+' + fmt(MODULES[o.mods[0]].price))).join('');
+
+let lastBrief = '';
+
+function recalc() {
+  const picked = sel => [...document.querySelectorAll(`input[name="${sel}"]:checked`)].map(el => el.value);
+  const symp = SYMPTOMS.filter(s => picked('symptom').includes(s.id));
+  const shape = SHAPES.find(s => picked('shape').includes(s.id));
+  const extras = EXTRAS.filter(e => picked('extra').includes(e.id));
+
+  const mods = new Set();
+  symp.forEach(s => s.mods.forEach(m => mods.add(m)));
+  if (shape) shape.mods.forEach(m => mods.add(m));
+  extras.forEach(e => e.mods.forEach(m => mods.add(m)));
+
+  // a full backend absorbs the smaller build modules
+  if (mods.has('arch')) { mods.delete('patch'); mods.delete('scratch'); mods.delete('graft'); }
+  // a scoped fix does not also get a from-scratch build
+  if (mods.has('scratch')) mods.delete('patch');
+  // if authority is being rebuilt, the replication pass is part of that work
+  if (mods.has('authority') && mods.has('netpass')) mods.delete('netpass');
+  // a pentest is an audit, not a rebuild; hardening is quoted after the findings
+  if (mods.has('pentest')) { mods.delete('patch'); mods.delete('anticheat'); }
+
+  const order = Object.keys(MODULES);
+  const list = order.filter(k => mods.has(k));
+
+  const subtotal = list.reduce((a, k) => a + MODULES[k].price, 0);
+  const total = subtotal * (1 - DISCOUNT);
+
+  const body = document.getElementById('estBody');
+
+  if (!list.length) {
+    body.innerHTML = '<div class="est-empty">Pick the shape of the job and I\'ll scope it.</div>';
+    document.getElementById('estWas').textContent = '';
+    document.getElementById('estUsd').textContent = '$0';
+    document.getElementById('estRbx').textContent = 'R$0';
+    document.getElementById('estTime').textContent = '-';
+    lastBrief = '';
+    return;
   }
+
+  const diag = symp.length
+    ? `<div class="diag-label">// LIKELY CAUSE</div><ul class="diag-list">${symp.map(s => `<li>${s.cause}</li>`).join('')}</ul>`
+    : '';
+
+  const build = `<div class="diag-label">// WHAT I'D BUILD</div>` +
+    list.map(k => `<div class="est-line"><span>${MODULES[k].name}</span><span>${fmt(MODULES[k].price)}</span></div>`).join('') +
+    `<div class="est-line"><span>Next-3-clients rate (−30%)</span><span>−${fmt(subtotal - total)}</span></div>`;
+
+  body.innerHTML = diag + build;
+
+  const days = Math.max(1, Math.round(subtotal / 110));
+  const timeStr = days <= 2 ? '1–2 days' : `~${days}–${Math.ceil(days * 1.5)} days`;
+
+  document.getElementById('estWas').textContent = fmt(subtotal);
+  document.getElementById('estUsd').textContent = 'from ' + fmt(total);
+  document.getElementById('estRbx').textContent = rbx(total);
+  document.getElementById('estTime').textContent = timeStr;
+
+  lastBrief = [
+    'Commission brief, built with the estimator on limi\'s site',
+    '',
+    'Game / place link: [add yours]',
+    '',
+    'Shape of the job: ' + (shape ? shape.name : '(not picked)'),
+    '',
+    ...(symp.length ? ['What players are seeing:', ...symp.map(s => '  - ' + s.name), ''] : []),
+    'Scope the estimator suggested:',
+    ...list.map(k => '  - ' + MODULES[k].name + ' · ' + fmt(MODULES[k].price)),
+    '  - Next-3-clients rate: −30%',
+    '',
+    'Estimate: from ' + fmt(total) + ' (' + rbx(total) + '), roughly ' + timeStr + ' of work.',
+    'My budget: [add yours]'
+  ].filter(l => l !== '').join('\n');
+}
+recalc();
+
+/* ═══════════ COPY HELPERS ═══════════ */
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise((res, rej) => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); res(); } catch (e) { rej(e); }
+    document.body.removeChild(ta);
+  });
+}
+
+function flash(btn, msg) {
+  const old = btn.innerHTML;
+  btn.innerHTML = msg;
+  setTimeout(() => { btn.innerHTML = old; }, 1800);
+}
+
+document.getElementById('copyBrief').addEventListener('click', function () {
+  if (!lastBrief) { flash(this, 'PICK A SCOPE FIRST'); return; }
+  copyText(lastBrief).then(() => flash(this, 'COPIED ✓')).catch(() => flash(this, 'COPY FAILED'));
 });
 
-function showWarn(id) {
-  document.getElementById(id).classList.add('show');
-}
-function hideWarn(id) {
-  document.getElementById(id).classList.remove('show');
-}
+document.getElementById('dcCopy').addEventListener('click', function () {
+  copyText(this.dataset.handle)
+    .then(() => flash(this, 'COPIED ✓ &nbsp;· ADD ME ON DISCORD'))
+    .catch(() => flash(this, 'HANDLE: ' + this.dataset.handle));
+});
 
-function handleW1(reduce) {
-  if (reduce) quality = 'low';
-  hideWarn('warn1');
-  runPhase2();
-}
+/* ═══════════ PING DEMO ═══════════ */
+(function () {
+  const SWEEP = 1900;          // ms for the attack to cross the track
+  const WINDOW_MS = 120;       // parry window width
+  const CENTRE = 0.72;         // where the window sits along the track
+  const HALF = (WINDOW_MS / SWEEP) / 2;
+  const W0 = CENTRE - HALF, W1 = CENTRE + HALF;
 
-function handleW2(disable) {
-  if (disable) quality = 'off';
-  hideWarn('warn2');
-  runPhase2();
-}
+  const $ = id => document.getElementById(id);
+  const range = $('pingRange'), pingVal = $('pingVal');
+  const startBtn = $('pingStart'), parryBtn = $('pingParry');
+  const atk = [$('atkNaive'), $('atkRewind')];
+  const inp = { naive: $('inNaive'), rewind: $('inRewind') };
+  const verd = { naive: $('vNaive'), rewind: $('vRewind') };
 
-function runPhase2() {
-  phase2.forEach(([delay, text, cls]) => {
-    setTimeout(() => line(text, cls), delay);
+  [$('winNaive'), $('winRewind')].forEach(w => {
+    w.style.left = (W0 * 100) + '%';
+    w.style.width = ((W1 - W0) * 100) + '%';
   });
-  const last = phase2[phase2.length - 1][0];
-  setTimeout(launchSite, last + 250);
-}
 
-function launchSite() {
-  const term = document.getElementById('terminal');
-  term.classList.add('fade-out');
-  const main = document.getElementById('main');
-  main.classList.add('visible');
-  if (quality === 'off') {
-    document.getElementById('gridBg').style.display = 'block';
-  } else {
-    const canvas = document.getElementById('glCanvas');
-    canvas.classList.add('visible');
-    initGL(quality === 'low');
+  let t0 = null, pressF = null, running = false, raf = null, pendingTimer = null, autoArmed = false;
+  const ping = () => +range.value;
+
+  range.addEventListener('input', () => { pingVal.textContent = ping() + ' ms'; });
+
+  function setVerdict(el, hit, text) {
+    el.className = 'lane-verdict ' + (hit ? 'hit' : 'miss');
+    el.textContent = text;
   }
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => {
-    term.style.display = 'none';
-    document.body.style.overflow = '';
-  }, 900);
-}
+  function showInput(el, f) {
+    const c = Math.min(Math.max(f, 0), 1);
+    el.style.left = (c * 100) + '%';
+    el.classList.toggle('flip', c > 0.5);   // keep the label inside the track
+    el.classList.add('show');
+  }
+  const inWindow = f => f >= W0 && f <= W1;
+  const offset = f => Math.round((f - CENTRE) * SWEEP);
+  const signed = ms => (ms > 0 ? '+' : '') + ms + ' ms';
 
-function goToHire() {
-  showTab('hire', document.getElementById('tab-hire'));
-}
+  function reset() {
+    clearTimeout(pendingTimer);
+    autoArmed = false;
+    cancelAnimationFrame(raf);
+    pressF = null;
+    Object.values(inp).forEach(el => el.classList.remove('show'));
+    Object.values(verd).forEach(el => { el.className = 'lane-verdict'; el.textContent = 'INCOMING…'; });
+    ['roPress', 'roNaive', 'roRewind', 'roErr'].forEach(id => $(id).textContent = '-');
+    atk.forEach(a => a.style.left = '0%');
+  }
 
-function showTab(name, el) {
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('s-' + name).classList.add('active');
-  el.classList.add('active');
-  document.getElementById('main').scrollTo(0, 0);
-}
-
-let pkgIdx = 0;
-
-function pkgPanels() {
-  return document.querySelectorAll('#pkgStage .pkg-panel');
-}
-
-function pkgGo(i) {
-  const panels = pkgPanels();
-  const total = panels.length;
-  if (!total) return;
-  pkgIdx = (i + total) % total;
-  panels.forEach((p, n) => p.classList.toggle('active', n === pkgIdx));
-  document.querySelectorAll('#pkgDots .pkg-dot').forEach((d, n) => d.classList.toggle('active', n === pkgIdx));
-}
-
-function pkgNav(dir) {
-  pkgGo(pkgIdx + dir);
-}
-
-function pkgInit() {
-  const panels = pkgPanels();
-  const total = panels.length;
-  const left = document.querySelector('.pkg-arrow-left');
-  const right = document.querySelector('.pkg-arrow-right');
-  const dots = document.getElementById('pkgDots');
-  const single = total <= 1;
-  if (left) left.style.display = single ? 'none' : '';
-  if (right) right.style.display = single ? 'none' : '';
-  if (dots) {
-    dots.innerHTML = '';
-    if (!single) {
-      panels.forEach((p, i) => {
-        const d = document.createElement('button');
-        d.className = 'pkg-dot';
-        d.setAttribute('aria-label', 'Go to package ' + (i + 1));
-        d.onclick = () => pkgGo(i);
-        dots.appendChild(d);
-      });
+  function step(now) {
+    const f = (now - t0) / SWEEP;
+    if (autoArmed && pressF === null && f >= CENTRE) parry(CENTRE);
+    atk.forEach(a => a.style.left = (Math.min(f, 1) * 100) + '%');
+    if (f >= 1) {
+      running = false;
+      parryBtn.disabled = true;
+      startBtn.textContent = 'RUN AGAIN';
+      if (pressF === null) {
+        setVerdict(verd.naive, false, 'NO INPUT');
+        setVerdict(verd.rewind, false, 'NO INPUT');
+      }
+      return;
     }
+    raf = requestAnimationFrame(step);
   }
-  panels.forEach((p, i) => {
-    const idx = p.querySelector('.pkg-index');
-    if (idx) idx.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+
+  function start() {
+    reset();
+    running = true;
+    parryBtn.disabled = false;
+    startBtn.textContent = 'RUN AGAIN';
+    t0 = performance.now();
+    autoArmed = true;   // the player reads the attack perfectly; the rest is ping
+    raf = requestAnimationFrame(step);
+  }
+
+  function parry(forceF) {
+    if (!running || pressF !== null) return;
+    autoArmed = false;
+    const f = (typeof forceF === 'number') ? forceF : (performance.now() - t0) / SWEEP;
+    pressF = f;
+    const lag = ping() / 2;               // one-way trip to the server
+
+    showInput(inp.rewind, f);
+    setVerdict(verd.rewind, inWindow(f), inWindow(f) ? 'PARRIED' : (f < W0 ? 'MISSED · EARLY' : 'MISSED · LATE'));
+
+    $('roPress').textContent = signed(offset(f));
+    $('roRewind').textContent = signed(offset(f));
+    $('roErr').textContent = signed(Math.round(lag));
+
+    pendingTimer = setTimeout(() => {
+      const fn = f + lag / SWEEP;
+      showInput(inp.naive, fn);
+      setVerdict(verd.naive, inWindow(fn), inWindow(fn) ? 'PARRIED' : (fn < W0 ? 'MISSED · EARLY' : 'MISSED · LATE'));
+      $('roNaive').textContent = signed(offset(fn));
+    }, lag);
+  }
+
+  startBtn.addEventListener('click', start);
+  parryBtn.addEventListener('click', parry);
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && running) { e.preventDefault(); parry(); }
   });
-  pkgGo(0);
+  pingVal.textContent = ping() + ' ms';
+})();
+
+/* ═══════════ CHART: HOW MANY UNITS FIT IN A FRAME ═══════════ */
+(function () {
+  const svg = document.getElementById('chartUnits');
+  const W = 660, H = 210, L = 132, R = 92, T = 44, B = 34;
+  const XMAX = 7000, BUDGET = 16.6;
+  const MONO = "'Share Tech Mono',monospace";
+
+  const naive = n => 0.12 * n + 0.00002 * n * n + 0.5;   // per-instance units
+  const fast  = n => 0.0025 * n + 0.8;                   // batched, server-only state
+
+  const CAP_NAIVE = 130, CAP_FAST = 6300;                // where each hits 16.6 ms
+  const xOf = n => L + (Math.min(n, XMAX) / XMAX) * (W - L - R);
+
+  const rows = [
+    { label: 'THE USUAL WAY', cap: CAP_NAIVE, y: 62,  dash: true  },
+    { label: 'THIS SYSTEM',   cap: CAP_FAST,  y: 118, dash: false }
+  ];
+  const BAR = 40;
+
+  let g = '';
+  g += `<text x="12" y="20" fill="#7a7a7a" font-family="${MONO}" font-size="9" letter-spacing="1">UNITS THAT FIT IN ONE FRAME (16.6 MS AT 60 HZ)</text>`;
+
+  // baseline + scale ticks
+  [0, 2000, 4000, 6000].forEach(v => {
+    g += `<line x1="${xOf(v)}" y1="${T}" x2="${xOf(v)}" y2="${H - B}" stroke="#1a1a1a"/>`;
+    g += `<text x="${xOf(v)}" y="${H - B + 18}" fill="#7a7a7a" font-family="${MONO}" font-size="10" text-anchor="middle">${v.toLocaleString()}</text>`;
+  });
+
+  rows.forEach(r => {
+    const w = Math.max(xOf(r.cap) - L, 3);
+    g += `<text x="${L - 14}" y="${r.y + BAR / 2 + 4}" fill="#9a9a9a" font-family="${MONO}" font-size="10" letter-spacing="1" text-anchor="end">${r.label}</text>`;
+    if (r.dash) {
+      g += `<rect x="${L}" y="${r.y}" width="${w}" height="${BAR}" fill="none" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="6 4"/>`;
+      g += `<text x="${L + w + 12}" y="${r.y + BAR / 2 + 4}" fill="#c9c9c9" font-family="${MONO}" font-size="13" paint-order="stroke" stroke="#000" stroke-width="4">${r.cap.toLocaleString()}</text>`;
+    } else {
+      g += `<rect x="${L}" y="${r.y}" width="${w}" height="${BAR}" fill="#fff"/>`;
+      g += `<text x="${L + w + 12}" y="${r.y + BAR / 2 + 4}" fill="#fff" font-family="${MONO}" font-size="13" paint-order="stroke" stroke="#000" stroke-width="4">${r.cap.toLocaleString()}</text>`;
+    }
+  });
+
+  // slider marker
+  g += `<line id="uMark" x1="0" y1="${T}" x2="0" y2="${H - B}" stroke="#fff" stroke-width="1" opacity="0.5" stroke-dasharray="3 3"/>`;
+  g += `<text id="uMarkT" x="0" y="${T - 8}" fill="#fff" font-family="${MONO}" font-size="10" text-anchor="middle" opacity="0.8">-</text>`;
+
+  svg.innerHTML = g;
+
+  const range = document.getElementById('unitRange');
+  const out   = document.getElementById('unitVal');
+  const nOut  = document.getElementById('naiveMs');
+  const fOut  = document.getElementById('fastMs');
+  const nCard = document.getElementById('naiveCard');
+  const fCard = document.getElementById('fastCard');
+  const mark  = document.getElementById('uMark');
+  const markT = document.getElementById('uMarkT');
+
+  const verdict = ms => {
+    const share = ms / BUDGET;
+    return share > 1
+      ? { txt: share.toFixed(1) + '× over budget', cls: 'verdict over' }
+      : { txt: Math.max(Math.round(share * 100), 1) + '% of the frame', cls: 'verdict ok' };
+  };
+
+  function update() {
+    const n = +range.value;
+    const x = xOf(n);
+    out.textContent = n.toLocaleString();
+
+    const a = verdict(naive(n)), b = verdict(fast(n));
+    nOut.textContent = a.txt; nCard.className = a.cls;
+    fOut.textContent = b.txt; fCard.className = b.cls;
+
+    mark.setAttribute('x1', x); mark.setAttribute('x2', x);
+    markT.setAttribute('x', Math.min(Math.max(x, L + 24), W - R + 40));
+    markT.textContent = n.toLocaleString() + ' UNITS';
+  }
+  range.addEventListener('input', update);
+  update();
+})();
+
+/* ═══════════ CHART: GATE EVALUATION COST ═══════════ */
+(function () {
+  const svg = document.getElementById('chartGates');
+  const W = 660, H = 200, L = 156, R = 96, T = 44, B = 34;
+  const MONO = "'Share Tech Mono',monospace";
+  const BUDGET = 16.6, GATES = 8000, XMAX = 130;   // x axis is % of frame budget
+
+  const pollMs = 0.0025 * GATES;                   // every gate, every tick
+  const evtMs  = pollMs * 0.006;                   // only what changed (~0.6%)
+  const pct = ms => (ms / BUDGET) * 100;
+
+  const xOf = p => L + (Math.min(p, XMAX) / XMAX) * (W - L - R);
+  const BAR = 40;
+
+  const rows = [
+    { label: 'POLL EVERY GATE', ms: pollMs, y: 58,  dash: true  },
+    { label: 'ONLY WHAT CHANGED', ms: evtMs, y: 114, dash: false }
+  ];
+
+  let g = '';
+  g += `<text x="12" y="20" fill="#7a7a7a" font-family="${MONO}" font-size="9" letter-spacing="1">SHARE OF ONE FRAME USED · 8,000-GATE CIRCUIT</text>`;
+
+  [0, 25, 50, 75, 100].forEach(v => {
+    g += `<line x1="${xOf(v)}" y1="${T}" x2="${xOf(v)}" y2="${H - B}" stroke="#1a1a1a"/>`;
+    g += `<text x="${xOf(v)}" y="${H - B + 18}" fill="#7a7a7a" font-family="${MONO}" font-size="10" text-anchor="middle">${v}%</text>`;
+  });
+  g += `<line x1="${xOf(100)}" y1="${T - 4}" x2="${xOf(100)}" y2="${H - B}" stroke="#8a8a8a" stroke-width="1.5"/>`;
+  g += `<text x="${xOf(100)}" y="${T - 12}" fill="#9a9a9a" font-family="${MONO}" font-size="9" text-anchor="middle" letter-spacing="1">FRAME BUDGET</text>`;
+
+  rows.forEach(r => {
+    const p = pct(r.ms);
+    const w = Math.max(xOf(p) - L, 3);
+    const val = (p >= 10 ? p.toFixed(0) : p.toFixed(1)) + '% · ' + (r.ms >= 1 ? r.ms.toFixed(0) : r.ms.toFixed(2)) + ' ms';
+    g += `<text x="${L - 14}" y="${r.y + BAR / 2 + 4}" fill="#9a9a9a" font-family="${MONO}" font-size="10" letter-spacing="1" text-anchor="end">${r.label}</text>`;
+    if (r.dash) {
+      g += `<rect x="${L}" y="${r.y}" width="${w}" height="${BAR}" fill="none" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="6 4"/>`;
+      g += `<text x="${L + w + 12}" y="${r.y + BAR / 2 + 4}" fill="#c9c9c9" font-family="${MONO}" font-size="12" paint-order="stroke" stroke="#000" stroke-width="4">${val}</text>`;
+    } else {
+      g += `<rect x="${L}" y="${r.y}" width="${w}" height="${BAR}" fill="#fff"/>`;
+      g += `<text x="${L + w + 12}" y="${r.y + BAR / 2 + 4}" fill="#fff" font-family="${MONO}" font-size="12" paint-order="stroke" stroke="#000" stroke-width="4">${val}</text>`;
+    }
+  });
+
+  svg.innerHTML = g;
+})();
+
+/* ═══════════ NAV / VOICE / VISUALS ═══════════ */
+function toggleNav() {
+  const links = document.getElementById('navLinks');
+  const btn = document.getElementById('navToggle');
+  const open = links.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? 'CLOSE' : 'MENU';
 }
 
-pkgInit();
+const MODES = ['lite', 'full', 'off'];   // new visitors start on lite
+let modeIdx = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 2 : 0;
+let glStarted = false, glRunning = true, glLow = true;
 
+function applyVisuals() {
+  const mode = MODES[modeIdx];
+  document.getElementById('visBtn').textContent = 'VISUALS: ' + mode.toUpperCase();
+  const canvas = document.getElementById('glCanvas');
+  const grid = document.getElementById('gridBg');
+
+  if (mode === 'off') {
+    canvas.classList.remove('visible');
+    grid.classList.add('visible');
+    glRunning = false;
+  } else {
+    grid.classList.remove('visible');
+    canvas.classList.add('visible');
+    glRunning = true;
+    glLow = (mode === 'lite');
+    if (!glStarted) { glStarted = true; initGL(glLow); }
+  }
+}
+
+function cycleVisuals() {
+  modeIdx = (modeIdx + 1) % MODES.length;
+  applyVisuals();
+}
+
+/* ═══════════ BOOT ═══════════ */
+const BOOT_LINES = [
+  'LIMI/OS · portfolio',
+  'server-authoritative systems ....... ready',
+  'case studies ....................... 3',
+  'estimator .......................... ready',
+  '<b>&gt; welcome.</b>'
+];
+
+const bootOut = document.getElementById('bootOut');
+let bootDone = false;
+
+function endBoot() {
+  if (bootDone) return;
+  bootDone = true;
+  const b = document.getElementById('boot');
+  b.classList.add('gone');
+  setTimeout(() => b.remove(), 520);
+  applyVisuals();
+}
+
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash) {
+  endBoot();
+} else {
+  BOOT_LINES.forEach((t, i) => setTimeout(() => {
+    if (bootDone) return;
+    const d = document.createElement('div');
+    d.innerHTML = t;
+    bootOut.appendChild(d);
+  }, i * 170));
+  setTimeout(endBoot, BOOT_LINES.length * 170 + 450);
+}
+
+/* ═══════════ AMBIENT SHADER ═══════════ */
 function initGL(lowQ) {
   const canvas = document.getElementById('glCanvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  if (!gl) return;
+  if (!gl) { document.getElementById('gridBg').classList.add('visible'); return; }
 
-  const scale = lowQ ? 0.35 : 0.75;
+  const scale = lowQ ? 0.3 : 0.6;
 
   function resize() {
     canvas.width  = Math.floor(window.innerWidth  * scale);
@@ -1425,91 +1800,51 @@ function initGL(lowQ) {
   window.addEventListener('resize', resize);
   resize();
 
-  const VS = `
-    attribute vec2 pos;
-    void main(){ gl_Position = vec4(pos,0.0,1.0); }
-  `;
+  const VS = `attribute vec2 pos; void main(){ gl_Position = vec4(pos,0.0,1.0); }`;
 
   const FS = `
     precision mediump float;
-    uniform vec2  uRes;
-    uniform float uTime;
-
-    vec2 rot(vec2 p, float a) {
-      return vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
-    }
-
-    float rand(float n) {
-      return fract(sin(n) * 43758.5453123);
-    }
-
-    vec2 rand2(vec2 p) {
-      return fract(vec2(sin(p.x * 591.32 + p.y * 154.077), cos(p.x * 391.32 + p.y * 49.077)));
-    }
-
-    float noise1(float p) {
-      return mix(rand(floor(p)), rand(floor(p) + 1.0), fract(p));
-    }
-
-    float voronoi(vec2 x) {
-      vec2 p = floor(x);
-      vec2 f = fract(x);
-      vec2 res = vec2(8.0);
-      for(int j = -1; j <= 1; j++) {
-        for(int i = -1; i <= 1; i++) {
-          vec2 b = vec2(float(i), float(j));
-          vec2 r = b - f + rand2(p + b);
-          float d = max(abs(r.x), abs(r.y));
-          if(d < res.x) { res.y = res.x; res.x = d; }
-          else if(d < res.y) { res.y = d; }
-        }
-      }
+    uniform vec2 uRes; uniform float uTime;
+    vec2 rot(vec2 p, float a){ return vec2(p.x*cos(a)-p.y*sin(a), p.x*sin(a)+p.y*cos(a)); }
+    float rand(float n){ return fract(sin(n)*43758.5453123); }
+    vec2 rand2(vec2 p){ return fract(vec2(sin(p.x*591.32+p.y*154.077), cos(p.x*391.32+p.y*49.077))); }
+    float noise1(float p){ return mix(rand(floor(p)), rand(floor(p)+1.0), fract(p)); }
+    float voronoi(vec2 x){
+      vec2 p = floor(x); vec2 f = fract(x); vec2 res = vec2(8.0);
+      for(int j=-1;j<=1;j++){ for(int i=-1;i<=1;i++){
+        vec2 b = vec2(float(i), float(j));
+        vec2 r = b - f + rand2(p+b);
+        float d = max(abs(r.x), abs(r.y));
+        if(d < res.x){ res.y = res.x; res.x = d; } else if(d < res.y){ res.y = d; }
+      }}
       return res.y - res.x;
     }
-
-    void main() {
-      float flicker = noise1(uTime * 0.25) * 0.15 + 0.9;
+    void main(){
+      float flicker = noise1(uTime*0.25)*0.15 + 0.9;
       vec2 uv = gl_FragCoord.xy / uRes.xy;
       uv = (uv - 0.5) * 2.0;
       vec2 suv = uv;
       uv.x *= uRes.x / uRes.y;
-
       uv *= 1.1;
-      uv = rot(uv, sin(uTime * 0.12) * 1.0);
-      uv += uTime * 0.25;
-
-      float v = 0.0;
-      float a = 0.6, f = 1.0;
-
-      for(int i = 0; i < 3; i++) {
-        float v1 = voronoi(uv * f + 5.0);
-        float v2 = 0.0;
-
-        if(i > 0) {
-          v2 = voronoi(uv * f * 0.5 + 50.0 + uTime * 0.4);
+      uv = rot(uv, sin(uTime*0.12));
+      uv += uTime * 0.18;
+      float v = 0.0; float a = 0.6; float f = 1.0;
+      for(int i=0;i<3;i++){
+        float v1 = voronoi(uv*f + 5.0); float v2 = 0.0;
+        if(i > 0){
+          v2 = voronoi(uv*f*0.5 + 50.0 + uTime*0.4);
           float va = 1.0 - smoothstep(0.0, 0.1, v1);
           float vb = 1.0 - smoothstep(0.0, 0.08, v2);
           v += a * pow(va * (0.5 + vb), 2.0);
         }
-
         v1 = 1.0 - smoothstep(0.0, 0.3, v1);
-        v2 = a * noise1(v1 * 5.5 + 0.1);
-
-        if(i == 0)
-          v += v2 * flicker;
-        else
-          v += v2;
-
-        f *= 3.0;
-        a *= 0.7;
+        v2 = a * noise1(v1*5.5 + 0.1);
+        if(i == 0) v += v2 * flicker; else v += v2;
+        f *= 3.0; a *= 0.7;
       }
-
       v *= exp(-0.6 * length(suv)) * 1.2;
-
       vec3 cexp = vec3(3.8, 4.0, 3.4);
-      vec3 col = vec3(pow(v, cexp.x), pow(v, cexp.y), pow(v, cexp.z)) * 2.0;
-
-      gl_FragColor = vec4(col, 1.0);
+      gl_FragColor = vec4(vec3(pow(v,cexp.x), pow(v,cexp.y), pow(v,cexp.z)) * 2.0, 1.0);
     }
   `;
 
@@ -1522,8 +1857,7 @@ function initGL(lowQ) {
   const prog = gl.createProgram();
   gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, VS));
   gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
+  gl.linkProgram(prog); gl.useProgram(prog);
 
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -1533,14 +1867,18 @@ function initGL(lowQ) {
   gl.enableVertexAttribArray(aPos);
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-  const uRes  = gl.getUniformLocation(prog, 'uRes');
+  const uRes = gl.getUniformLocation(prog, 'uRes');
   const uTime = gl.getUniformLocation(prog, 'uTime');
 
+  let visible = true;
+  document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
+
   function frame(ms) {
+    requestAnimationFrame(frame);
+    if (!glRunning || !visible) return;
     gl.uniform2f(uRes, canvas.width, canvas.height);
     gl.uniform1f(uTime, ms * 0.001);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }
