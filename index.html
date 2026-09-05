@@ -42,8 +42,7 @@
       "name": "Roblox backend & networking commissions",
       "serviceType": "Game programming"
     },
-    "priceCurrency": "USD",
-    "priceSpecification": { "@type": "PriceSpecification", "minPrice": 50, "priceCurrency": "USD" }
+    "priceCurrency": "USD"
   }
 }
 </script>
@@ -583,70 +582,14 @@ input[type=range]::-moz-range-thumb { width: 13px; height: 13px; background: #ff
 }
 .work-card .work-link:hover { color: #fff; border-color: #fff; }
 
-/* ── DIAGNOSTIC ESTIMATOR ───────────────── */
-.est { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: start; }
-.est-panel { border: 1px solid var(--border); }
-.est-group { border-bottom: 1px solid var(--border); padding: 24px clamp(18px, 2.4vw, 28px); }
-.est-group:last-child { border-bottom: none; }
-.est-label { font-family: var(--mono); font-size: 9px; letter-spacing: 4px; color: var(--dim); margin-bottom: 6px; }
-.est-hint { font-size: 11.5px; color: #8a8a8a; margin-bottom: 16px; }
-
-.opt {
-  position: relative;
-  display: flex; align-items: baseline; gap: 14px;
+/* ── PRICING ────────────────────────────── */
+.pricing-note {
   border: 1px solid var(--border);
-  padding: 14px 16px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  padding: clamp(24px, 4vw, 40px);
+  max-width: 640px;
 }
-.opt:last-child { margin-bottom: 0; }
-.opt:hover { border-color: var(--border-hi); background: var(--hover-bg); }
-.opt input { position: absolute; opacity: 0; pointer-events: none; }
-.opt-mark { flex: 0 0 auto; width: 11px; height: 11px; border: 1px solid #6a6a6a; margin-top: 4px; }
-.opt input:checked ~ .opt-mark { background: #fff; border-color: #fff; }
-.opt input:focus-visible ~ .opt-mark { outline: 1px solid #fff; outline-offset: 3px; }
-.opt:has(input:checked) { border-color: #fff; background: rgba(255,255,255,0.05); }
-.opt-text { flex: 1; min-width: 0; }
-.opt-text .opt-name, .opt-text .opt-note { display: block; }
-.opt-name { font-size: 13px; color: #ddd; }
-.opt:has(input:checked) .opt-name { color: #fff; }
-.opt-note { font-size: 11px; color: #8a8a8a; line-height: 1.6; margin-top: 4px; }
-
-.est-out { border: 1px solid var(--border); position: sticky; top: 84px; }
-.est-out-head {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 4px;
-  color: var(--dim); padding: 18px 22px; border-bottom: 1px solid var(--border);
-}
-.est-body { padding: 20px 22px; min-height: 140px; }
-.est-empty { font-size: 12px; color: #7a7a7a; }
-.diag-label { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--dim); margin: 4px 0 8px; }
-.diag-list { list-style: none; margin-bottom: 20px; }
-.diag-list li { font-size: 12px; color: #b4b4b4; padding: 6px 0 6px 14px; position: relative; }
-.diag-list li::before { content: '›'; position: absolute; left: 0; color: #6a6a6a; }
-.est-line { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; color: #a4a4a4; padding: 5px 0; }
-.est-line span:last-child { font-family: var(--mono); color: #d4d4d4; white-space: nowrap; }
-
-.est-total { border-top: 1px solid var(--border); padding: 22px; }
-.est-total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-.est-total-row .k { font-family: var(--mono); font-size: 10px; letter-spacing: 4px; color: var(--dim); }
-.est-usd { font-family: var(--mono); font-size: 30px; line-height: 1; }
-.est-rbx, .est-time { font-family: var(--mono); font-size: 14px; color: #9a9a9a; }
-.est-terms { font-size: 11px; color: #8a8a8a; margin-top: 16px; line-height: 1.7; }
-.est-off {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
-  color: #000; background: #fff; padding: 6px 10px;
-  display: inline-block; margin-bottom: 14px;
-}
-.est-was { font-family: var(--mono); font-size: 12px; color: #7a7a7a; text-decoration: line-through; }
-.est-out .btn-solid { width: 100%; justify-content: center; margin-top: 18px; }
-.est-out .btn-mini { width: 100%; margin-top: 8px; }
-.est-foot { font-size: 11.5px; color: #8a8a8a; margin-top: 20px; max-width: 640px; }
-
-@media (max-width: 900px) {
-  .est { grid-template-columns: 1fr; }
-  .est-out { position: static; }
-}
+.pricing-note p { font-size: 13px; color: #b4b4b4; line-height: 1.9; margin-bottom: 22px; }
+.pricing-note .btn-solid { display: inline-flex; }
 
 /* ── PROCESS ────────────────────────────── */
 .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
@@ -714,7 +657,7 @@ footer {
   <div class="nav-links" id="navLinks">
     <a href="#work">WORK</a>
     <a href="#mirage">MIRAGE</a>
-    <a href="#rates">RATES</a>
+    <a href="#rates">PRICING</a>
     <a href="#process">PROCESS</a>
     <a href="#faq">FAQ</a>
     <a href="#contact">CONTACT</a>
@@ -737,7 +680,7 @@ footer {
     something you already have is slow, desyncing or exploitable, I fix that too.
   </p>
   <div class="hero-ctas">
-    <a class="btn-solid" href="#rates">GET AN ESTIMATE &rarr;</a>
+    <a class="btn-solid" href="#rates">TALK PRICING &rarr;</a>
     <a class="btn-ghost" href="#work">SEE THE WORK</a>
   </div>
 
@@ -1114,65 +1057,18 @@ footer {
   </div>
 </section>
 
-<!-- DIAGNOSTIC ESTIMATOR -->
+<!-- PRICING -->
 <section class="band" id="rates">
   <div class="band-head">
     <div class="eyebrow">// COMMISSION PRICING</div>
-    <h2 class="prose">Pick the shape of the job. Get a scope.</h2>
-    <p class="band-sub prose">Start with what you want built: a system that doesn't exist yet, a whole backend, a fix, or a pentest. If something is already misbehaving, add the symptoms and the panel works out what's likely causing it, what I'd build, and roughly what that costs.</p>
+    <h2 class="prose">Let's talk about it first.</h2>
+    <p class="band-sub prose">A proper price estimate depends entirely on your budget and the scope of the job, so I'd rather discuss it than hand you a number that means nothing yet.</p>
   </div>
 
-  <div class="est">
-    <div class="est-panel">
-      <div class="est-group">
-        <div class="est-label">// SHAPE OF THE JOB · START HERE</div>
-        <p class="est-hint">Most of this is building. Repairs and pentests live in the same list.</p>
-        <div id="shapes"></div>
-      </div>
-      <div class="est-group">
-        <div class="est-label">// ANYTHING MISBEHAVING? · OPTIONAL</div>
-        <p class="est-hint">Only if something already exists and isn't working. Things a player or playtester would notice.</p>
-        <div id="symptoms"></div>
-      </div>
-      <div class="est-group">
-        <div class="est-label">// OPTIONAL EXTRAS</div>
-        <p class="est-hint">Genuinely optional. Everything above already includes the engineering.</p>
-        <div id="extras"></div>
-      </div>
-    </div>
-
-    <aside class="est-out">
-      <div class="est-out-head">// DIAGNOSIS</div>
-      <div class="est-body" id="estBody">
-        <div class="est-empty">Pick a symptom and I'll tell you what's usually causing it.</div>
-      </div>
-      <div class="est-total">
-        <div class="est-off">NEXT 3 CLIENTS ONLY · 30% OFF</div>
-        <div class="est-total-row">
-          <span class="k">TOTAL USD</span>
-          <span><span class="est-was" id="estWas"></span> <span class="est-usd" id="estUsd">$0</span></span>
-        </div>
-        <div class="est-total-row">
-          <span class="k">IN ROBUX</span>
-          <span class="est-rbx" id="estRbx">R$0</span>
-        </div>
-        <div class="est-total-row">
-          <span class="k">ROUGH TIME</span>
-          <span class="est-time" id="estTime">-</span>
-        </div>
-        <p class="est-terms">50% up front, 50% on delivery, in milestones you can check. If half up front doesn't work for you, say so; the split is negotiable. Revisions to the agreed spec are included. Robux is converted at the DevEx rate, not the purchase rate.</p>
-        <a class="btn-solid" href="#contact">SEND THIS TO ME &rarr;</a>
-        <button class="btn-mini" type="button" id="copyBrief">COPY AS A BRIEF</button>
-      </div>
-    </aside>
+  <div class="pricing-note">
+    <p class="prose">I take on work at both ends: quick, scoped fixes and full server-authoritative backends built from zero. What something costs comes down to what it actually needs, not a flat rate that fits everything from a targeted patch to weeks of architecture. Tell me what you're building, what's already there, and what you have to spend, and I'll tell you honestly what fits inside it.</p>
+    <a class="btn-solid" href="#contact">TELL ME WHAT YOU NEED &rarr;</a>
   </div>
-
-  <p class="est-foot prose">
-    These are starting points, not fixed quotes; the real number comes after I've looked at the
-    place file, and it can go down as easily as up. The 30% is for the next three commissions I
-    take, and it's already in the number above. If it still doesn't fit your budget, tell me the
-    budget and I'll tell you honestly what fits inside it.
-  </p>
 </section>
 
 <!-- PROCESS -->
@@ -1275,7 +1171,7 @@ footer {
       <a href="https://devforum.roblox.com/u/aslyumm" target="_blank" rel="noopener">DEVFORUM ↗</a>
       <a href="https://github.com/aslyumm" target="_blank" rel="noopener">GITHUB ↗</a>
     </div>
-    <p class="contact-note prose">Add me on Discord with the handle above, or message me on the DevForum if you'd rather keep it in one place. If you used the estimator, paste the brief it gave you; that's usually enough for me to reply with a real number.</p>
+    <p class="contact-note prose">Add me on Discord with the handle above, or message me on the DevForum if you'd rather keep it in one place. Tell me what you're building and your budget range; that's usually enough for me to reply with a real number.</p>
   </div>
 </section>
 
@@ -1287,170 +1183,6 @@ footer {
 </footer>
 
 <script>
-/* ═══════════ DIAGNOSTIC ESTIMATOR ═══════════ */
-const DEVEX = 0.0035; // USD per Robux
-
-const MODULES = {
-  scratch:  { name: 'The system itself, built from scratch',   price: 150 },
-  graft:    { name: 'Fitting it into your existing codebase',  price: 125 },
-  arch:     { name: 'Full server-authoritative backend',       price: 600 },
-  simcore:  { name: 'Headless simulation core',                price: 225 },
-  predict:  { name: 'Prediction + server rewind layer',        price: 175 },
-  netpass:  { name: 'Replication + bandwidth rework',          price: 150 },
-  authority:{ name: 'Authority moved back to the server',      price: 250 },
-  anticheat:{ name: 'Anticheat hardening + audit',             price: 100 },
-  profile:  { name: 'Profiling pass to find the actual cause', price: 75 },
-  patch:    { name: 'Targeted fix, scoped to one behaviour',   price: 50 },
-  pentest:  { name: 'Pentest pass: I attack it as an exploiter would', price: 125 },
-  report:   { name: 'Written findings, ranked by severity',    price: 50 },
-  docs:     { name: 'Written docs + handoff call',             price: 50 }
-};
-
-/* Launch rate, applied to every estimate while it lasts. */
-const DISCOUNT = 0.30;
-
-const SYMPTOMS = [
-  { id:'late', name:'Hits, parries or abilities land late for players on high ping',
-    cause:'The input is waiting on a full round trip before anything resolves, so correct timing reads as a miss.',
-    mods:['predict'] },
-  { id:'desync', name:'Players disagree about what happened: rubber-banding, positions that drift',
-    cause:'State is replicated per instance and arriving late or out of order, with nothing reconciling the client back.',
-    mods:['netpass','predict'] },
-  { id:'exploit', name:'Exploiters can do things they should not be able to',
-    cause:'Decisions the client should not be making are being made there, which leaves game state worth editing.',
-    mods:['authority','anticheat'] },
-  { id:'load', name:'The server chokes when a lot is happening at once',
-    cause:'Per-actor cost is growing faster than the tick budget, usually per-instance work that should be batched.',
-    mods:['profile','simcore','netpass'] },
-  { id:'scale', name:'I need far more units, projectiles or entities than the engine likes',
-    cause:'The default per-instance approach has a ceiling in the low hundreds; past that it needs a different data layout.',
-    mods:['simcore','netpass'] },
-  { id:'unsure', name:"Something is wrong and I don't know what",
-    cause:'Worth profiling before anything is rewritten; the visible symptom and the real cause are often in different systems.',
-    mods:['profile'] }
-];
-
-const SHAPES = [
-  { id:'sscratch', name:'A system that does not exist yet',
-    note:'Built from zero against a spec we write together: combat, simulation, networking, tooling.',
-    mods:['scratch'] },
-  { id:'sgraft',   name:'Something new inside a codebase that must not break',
-    note:'The same build, plus the work of fitting it to what you already have without breaking it.',
-    mods:['scratch','graft'] },
-  { id:'sarch',    name:'A whole backend, designed from zero',
-    note:'Architecture, systems and the rules everything else follows.',
-    mods:['arch'] },
-  { id:'sscale',   name:'An existing system rebuilt to hold far more',
-    note:'Same feature set, an order of magnitude more units, projectiles or players inside it.',
-    mods:['profile','simcore'] },
-  { id:'spentest', name:'Pentesting: I attack it as an exploiter would',
-    note:'I go at your live game with the tools they use, then hand you what got through and how to close it.',
-    mods:['pentest','report'] },
-  { id:'sfix',     name:'A bug fix in a system that already exists',
-    note:'One specific behaviour, scoped tightly, without a rewrite attached.',
-    mods:['patch'] }
-];
-
-const EXTRAS = [
-  { id:'docs', name:'Documentation + handoff call', note:'Written docs plus a walkthrough for your team.', mods:['docs'] }
-];
-
-const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
-const rbx = n => 'R$' + Math.round(n / DEVEX).toLocaleString('en-US');
-
-function optHTML(kind, o, right) {
-  const type = (kind === 'shape') ? 'radio' : 'checkbox';
-  return `<label class="opt">
-    <input type="${type}" name="${kind}" value="${o.id}" onchange="recalc()">
-    <span class="opt-mark"></span>
-    <span class="opt-text">
-      <span class="opt-name">${o.name}</span>
-      ${o.note ? `<span class="opt-note">${o.note}</span>` : ''}
-    </span>
-    ${right ? `<span class="opt-note" style="white-space:nowrap;margin-top:0">${right}</span>` : ''}
-  </label>`;
-}
-
-document.getElementById('shapes').innerHTML   = SHAPES.map(o => optHTML('shape', o)).join('');
-document.getElementById('symptoms').innerHTML = SYMPTOMS.map(o => optHTML('symptom', o)).join('');
-document.getElementById('extras').innerHTML   = EXTRAS.map(o => optHTML('extra', o, '+' + fmt(MODULES[o.mods[0]].price))).join('');
-
-let lastBrief = '';
-
-function recalc() {
-  const picked = sel => [...document.querySelectorAll(`input[name="${sel}"]:checked`)].map(el => el.value);
-  const symp = SYMPTOMS.filter(s => picked('symptom').includes(s.id));
-  const shape = SHAPES.find(s => picked('shape').includes(s.id));
-  const extras = EXTRAS.filter(e => picked('extra').includes(e.id));
-
-  const mods = new Set();
-  symp.forEach(s => s.mods.forEach(m => mods.add(m)));
-  if (shape) shape.mods.forEach(m => mods.add(m));
-  extras.forEach(e => e.mods.forEach(m => mods.add(m)));
-
-  // a full backend absorbs the smaller build modules
-  if (mods.has('arch')) { mods.delete('patch'); mods.delete('scratch'); mods.delete('graft'); }
-  // a scoped fix does not also get a from-scratch build
-  if (mods.has('scratch')) mods.delete('patch');
-  // if authority is being rebuilt, the replication pass is part of that work
-  if (mods.has('authority') && mods.has('netpass')) mods.delete('netpass');
-  // a pentest is an audit, not a rebuild; hardening is quoted after the findings
-  if (mods.has('pentest')) { mods.delete('patch'); mods.delete('anticheat'); }
-
-  const order = Object.keys(MODULES);
-  const list = order.filter(k => mods.has(k));
-
-  const subtotal = list.reduce((a, k) => a + MODULES[k].price, 0);
-  const total = subtotal * (1 - DISCOUNT);
-
-  const body = document.getElementById('estBody');
-
-  if (!list.length) {
-    body.innerHTML = '<div class="est-empty">Pick the shape of the job and I\'ll scope it.</div>';
-    document.getElementById('estWas').textContent = '';
-    document.getElementById('estUsd').textContent = '$0';
-    document.getElementById('estRbx').textContent = 'R$0';
-    document.getElementById('estTime').textContent = '-';
-    lastBrief = '';
-    return;
-  }
-
-  const diag = symp.length
-    ? `<div class="diag-label">// LIKELY CAUSE</div><ul class="diag-list">${symp.map(s => `<li>${s.cause}</li>`).join('')}</ul>`
-    : '';
-
-  const build = `<div class="diag-label">// WHAT I'D BUILD</div>` +
-    list.map(k => `<div class="est-line"><span>${MODULES[k].name}</span><span>${fmt(MODULES[k].price)}</span></div>`).join('') +
-    `<div class="est-line"><span>Next-3-clients rate (−30%)</span><span>−${fmt(subtotal - total)}</span></div>`;
-
-  body.innerHTML = diag + build;
-
-  const days = Math.max(1, Math.round(subtotal / 110));
-  const timeStr = days <= 2 ? '1–2 days' : `~${days}–${Math.ceil(days * 1.5)} days`;
-
-  document.getElementById('estWas').textContent = fmt(subtotal);
-  document.getElementById('estUsd').textContent = 'from ' + fmt(total);
-  document.getElementById('estRbx').textContent = rbx(total);
-  document.getElementById('estTime').textContent = timeStr;
-
-  lastBrief = [
-    'Commission brief, built with the estimator on limi\'s site',
-    '',
-    'Game / place link: [add yours]',
-    '',
-    'Shape of the job: ' + (shape ? shape.name : '(not picked)'),
-    '',
-    ...(symp.length ? ['What players are seeing:', ...symp.map(s => '  - ' + s.name), ''] : []),
-    'Scope the estimator suggested:',
-    ...list.map(k => '  - ' + MODULES[k].name + ' · ' + fmt(MODULES[k].price)),
-    '  - Next-3-clients rate: −30%',
-    '',
-    'Estimate: from ' + fmt(total) + ' (' + rbx(total) + '), roughly ' + timeStr + ' of work.',
-    'My budget: [add yours]'
-  ].filter(l => l !== '').join('\n');
-}
-recalc();
-
 /* ═══════════ COPY HELPERS ═══════════ */
 function copyText(text) {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
@@ -1468,11 +1200,6 @@ function flash(btn, msg) {
   btn.innerHTML = msg;
   setTimeout(() => { btn.innerHTML = old; }, 1800);
 }
-
-document.getElementById('copyBrief').addEventListener('click', function () {
-  if (!lastBrief) { flash(this, 'PICK A SCOPE FIRST'); return; }
-  copyText(lastBrief).then(() => flash(this, 'COPIED ✓')).catch(() => flash(this, 'COPY FAILED'));
-});
 
 document.getElementById('dcCopy').addEventListener('click', function () {
   copyText(this.dataset.handle)
@@ -1754,7 +1481,7 @@ const BOOT_LINES = [
   'LIMI/OS · portfolio',
   'server-authoritative systems ....... ready',
   'case studies ....................... 3',
-  'estimator .......................... ready',
+  'pricing ............................ by request',
   '<b>&gt; welcome.</b>'
 ];
 
